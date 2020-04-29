@@ -13,3 +13,14 @@ a{
 	text-align:center;
 	color: rgb(0,200,255);
 }
+.lang{
+	cursor: pointer;
+	outline: none; 
+	float:right;
+	border-width: 10px;
+	border-radius: 100px;
+	/*我觉得我这样做是多余的*/
+}
+.download a{
+	float: right
+}
