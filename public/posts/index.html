@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>codezm-cn的网络工程笔记</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="">
+    <meta name="generator" content="Hugo 0.164.0">
+    
+    
+    
+      <meta name="robots" content="noindex, nofollow">
+    
+    
+
+    <link rel="stylesheet" href="/ananke/css/main.css">
+    <script>
+  (function () {
+    "use strict";
+
+    
+    
+    function revealButtons() {
+      var buttons = document.querySelectorAll(".code-block .code-copy[hidden]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].hidden = false;
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", revealButtons);
+    } else {
+      revealButtons();
+    }
+
+    function flash(button) {
+      var label = button.querySelector(".code-copy-label");
+      var previous = label ? label.textContent : null;
+      button.classList.add("is-copied");
+      if (label) label.textContent = "Copied";
+      window.setTimeout(function () {
+        button.classList.remove("is-copied");
+        if (label && previous !== null) label.textContent = previous;
+      }, 2000);
+    }
+
+    function legacyCopy(text) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(area);
+      return ok;
+    }
+
+    function copyFrom(button) {
+      var container = button.closest(".code-block");
+      if (!container) return;
+      var pre = container.querySelector("pre");
+      if (!pre) return;
+      var source = pre.querySelector("code") || pre;
+      var text = source.innerText;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { flash(button); },
+          function () { if (legacyCopy(text)) flash(button); }
+        );
+      } else if (legacyCopy(text)) {
+        flash(button);
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      var button = event.target.closest(".code-copy");
+      if (button) copyFrom(button);
+    });
+  })();
+</script>
+
+    
+      
+
+    
+
+    
+    
+      <link href="/posts/index.xml" rel="alternate" type="application/rss+xml" title="codezm-cn的网络工程笔记" />
+      <link href="/posts/index.xml" rel="feed" type="application/rss+xml" title="codezm-cn的网络工程笔记" />
+      
+    
+
+    
+      <link rel="canonical" href="http://localhost:1313/posts/">
+    
+
+    
+    
+    <meta property="og:url" content="http://localhost:1313/posts/">
+	<meta property="og:site_name" content="codezm-cn的网络工程笔记">
+	<meta property="og:title" content="codezm-cn的网络工程笔记">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="website">
+
+	<meta itemprop="name" content="codezm-cn的网络工程笔记">
+	<meta itemprop="datePublished" content="2026-07-27T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-07-27T00:00:00+00:00">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="codezm-cn的网络工程笔记">
+
+	
+  </head><body class="ma0 avenir bg-near-white development is-section is-section">
+
+  
+  
+  
+  <header class="cover bg-top" style="background-image: url('http://localhost:1313/images/background.png');">
+    
+    <div class="bg-black-60">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l center items-center justify-between">
+    <a href="/" class="f3 fw2 hover-white white-90 dib no-underline">
+      
+        codezm-cn的网络工程笔记
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/linux/" title="Linux服务器 page">
+              Linux服务器
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/kali/" title="网络安全 page">
+              网络安全
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/huawei/" title="华为ensp page">
+              华为ensp
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/h3c/" title="华三 page">
+              华三
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/other/" title="杂项 page">
+              杂项
+            </a>
+          </li>
+          
+        </ul>
+      
+      <div class="ananke-socials"></div>
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv4 pv6-l ph3 ph4-ns">
+        <h1 class="f2 f-subheadline-l fw2 white-90 mb0 lh-title">
+          codezm-cn的网络工程笔记
+        </h1>
+        
+      </div>
+    </div>
+  </header>
+
+<main class="pb7" role="main">
+  
+  
+
+  <article class="pa3 pa4-ns nested-copy-line-height">
+    <section class="cf ph3 ph5-l pv3 pv4-l f4 tc-l center measure-wide lh-copy nested-links mid-gray"></section>
+    <section class="flex-ns mt5 flex-wrap justify-around">
+      
+        <div class="w-100 w-30-l mb4 relative bg-white">
+          
+<div class="w-100 mb4 nested-copy-line-height relative bg-white">
+  <div class="mb3 pa4 gray overflow-hidden bg-white">
+    
+    
+      <time class="f6 db" datetime="2026-07-27T00:00:00Z">July 27, 2026</time>
+    
+    <h1 class="f3 near-black">
+      <a href="/posts/other/260727_markdown/" class="link black dim">
+        MarkDown速查
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      <p>##标题用个井号，几个井号几级标题</p>
+<p><strong>加粗用两个星号包围</strong></p>
+<p><em>斜体用一个星号包围</em></p>
+<p><em><strong>粗斜体三个星号</strong></em></p>
+<p><del>两个删除线用波浪</del></p>
+<blockquote>
+<p>引用用&quot;&gt;&quot;</p>
+</blockquote>
+<hr>
+<p>分割线三个减号、三个星号</p>
+<p>[链接用<a href="url">title</a>,例子为百度](<a href="https://www.baidu.com">https://www.baidu.com</a>)</p>
+<p><img src="/images/yuanshen.png" alt="图片跟链接一样但是要多一个感叹号" title="鼠标放置显示文字用双引号"></p>
+<hr>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;代码块用三个’`‘包裹，记得加语言标识在第一个三个&#39;`&#39;&#34;</span>)
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;hello markdown&#34;</span>)</span></span></code></pre></div>
+  </div><hr>
+<ul>
+<li>无须表（带点）用减号</li>
+</ul>
+<ol>
+<li>有序表正常打</li>
+</ol>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> 减加中括号有勾选</p>
+</li>
+<li>
+<p><input checked="" disabled="" type="checkbox"> 加个x就勾选上了</p>
+</li>
+</ul>
+<hr>
+<table>
+	<thead>
+			<tr>
+					<th>标题下面一行减号代表上面是表标题</th>
+					<th style="text-align: left">左对齐</th>
+					<th style="text-align: right">右对齐</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>表格，内容用竖线分割做表</td>
+					<td style="text-align: left">那么居中对其就是冒号夹减号</td>
+					<td style="text-align: right">XD</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<p><a href="https://www.runoob.com/markdown/md-tutorial.html">感谢：菜鸟教程</a></p>
+    </div>
+    <a href="/posts/other/260727_markdown/" class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+  </div>
+</div>
+
+        </div>
+      
+        <div class="w-100 w-30-l mb4 relative bg-white">
+          
+<div class="w-100 mb4 nested-copy-line-height relative bg-white">
+  <div class="mb3 pa4 gray overflow-hidden bg-white">
+    
+    
+      <time class="f6 db" datetime="2026-07-27T00:00:00Z">July 27, 2026</time>
+    
+    <h1 class="f3 near-black">
+      <a href="/posts/linux/test/" class="link black dim">
+        测试
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      <p>12345</p>
+    </div>
+    <a href="/posts/linux/test/" class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+  </div>
+</div>
+
+        </div>
+      
+    </section>
+    </article>
+</main><footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="http://localhost:1313/" >
+    &copy;  codezm-cn的网络工程笔记 2026 
+  </a>
+    <div><div class="ananke-socials"></div>
+</div>
+  </div>
+</footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
