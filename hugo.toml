@@ -1,0 +1,38 @@
+baseURL = "https://codezm-cn.github.io/"
+title = "codezm-cn的网络工程笔记"
+locale = 'zh-CN'
+theme='ananke'
+featured_image= '/images/background.png'
+
+[params]
+  ShowReadingTime = true
+  ShowShareButtons = true
+  profileMode.enabled = true
+  profileMode.title = "测试" 
+
+[menu]
+  [[menu.main]]
+    identifier = "Linux"
+    name = "Linux服务器"
+    url = "/categories/Linux/"
+    weight = 10
+  [[menu.main]]
+    identifier = "Kali Linux"
+    name = "网络安全"
+    url = "/categories/Kali/"
+    weight = 20
+  [[menu.main]]
+    identifier = "huawei"
+    name = "华为ensp"
+    url = "/categories/Huawei/"
+    weight = 30
+  [[menu.main]]
+    identifier = "h3c"
+    name = "华三"
+    url = "/categories/H3C/"
+    weight = 40
+  [[menu.main]]
+    identifier = "other"
+    name = "杂项"
+    url = "/categories/other/"
+    weight = 50
