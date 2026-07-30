@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Linux安装过程记录（Ubuntu版本） | codezm-cn的网络工程笔记</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="安装信息如下：
+系统版本：Ubuntu-22.04.4-live-server-amd64
+
+点击链接下载镜像（清华镜像源）
+
+虚拟机版本：VMware WorkStation 17.5
+其他版本可能有所区别，仅供参考
+虚拟机参数配置：
+
+	
+			
+					内容
+					参数
+			
+	
+	
+			
+					内存
+					4GB
+			
+			
+					处理器数量
+					2
+			
+			
+					内核总数
+					4
+			
+			
+					硬盘
+					10GB
+			
+			
+					网络
+					NAT（后续视情况更改）
+			
+	
+
+安装过程
+
+
+
+ Try or Install Ubuntu Serve(默认，直接选)
+
+
+ Ubuntu Server with the HWE kernel(涉及新硬件等内容，虚拟机不选)
+
+
+
+
+ English
+
+
+
+ Continue without updating
+
+
+
+
+
+ Ubuntu server
+
+
+ Ubuntu server(minimized)
+
+
+
+最小安装，不方便后续使用，不推荐
+
+
+ search for third-party drivers
+
+
+
+推荐使用清华源
+
+    
+      Copy
+    
+    http://mirrors.tuna.tsinghua.edu.cn/ubuntu/
+  其他源推荐(阿里云、中科大、网易)
+
+    
+      Copy
+    
+    http://mirrors.aliyun.com/ubuntu/
+http://mirrors.ustc.edu.cn/ubuntu/
+http://mirrors.163.com/ubuntu/
+  
+安装截图那边带s（https）发现用不了，后修改为http（内网代理对 HTTP 的支持更完善，能有效避免 400 错误）">
+    <meta name="generator" content="Hugo 0.164.0">
+    
+    
+    
+      <meta name="robots" content="noindex, nofollow">
+    
+    
+
+    <link rel="stylesheet" href="/ananke/css/main.css">
+    <script>
+  (function () {
+    "use strict";
+
+    
+    
+    function revealButtons() {
+      var buttons = document.querySelectorAll(".code-block .code-copy[hidden]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].hidden = false;
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", revealButtons);
+    } else {
+      revealButtons();
+    }
+
+    function flash(button) {
+      var label = button.querySelector(".code-copy-label");
+      var previous = label ? label.textContent : null;
+      button.classList.add("is-copied");
+      if (label) label.textContent = "Copied";
+      window.setTimeout(function () {
+        button.classList.remove("is-copied");
+        if (label && previous !== null) label.textContent = previous;
+      }, 2000);
+    }
+
+    function legacyCopy(text) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(area);
+      return ok;
+    }
+
+    function copyFrom(button) {
+      var container = button.closest(".code-block");
+      if (!container) return;
+      var pre = container.querySelector("pre");
+      if (!pre) return;
+      var source = pre.querySelector("code") || pre;
+      var text = source.innerText;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { flash(button); },
+          function () { if (legacyCopy(text)) flash(button); }
+        );
+      } else if (legacyCopy(text)) {
+        flash(button);
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      var button = event.target.closest(".code-copy");
+      if (button) copyFrom(button);
+    });
+  })();
+</script>
+
+    
+      
+
+    
+
+    
+
+    
+      <link rel="canonical" href="http://localhost:1313/posts/linux/260730_linux%E5%AE%89%E8%A3%85%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/">
+    
+
+    
+    
+    <meta property="og:url" content="http://localhost:1313/posts/linux/260730_linux%E5%AE%89%E8%A3%85%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/">
+	<meta property="og:site_name" content="codezm-cn的网络工程笔记">
+	<meta property="og:title" content="Linux安装过程记录（Ubuntu版本）">
+	<meta property="og:description" content="安装信息如下：
+系统版本：Ubuntu-22.04.4-live-server-amd64
+点击链接下载镜像（清华镜像源）
+虚拟机版本：VMware WorkStation 17.5
+其他版本可能有所区别，仅供参考
+虚拟机参数配置： 内容 参数 内存 4GB 处理器数量 2 内核总数 4 硬盘 10GB 网络 NAT（后续视情况更改） 安装过程 Try or Install Ubuntu Serve(默认，直接选)
+Ubuntu Server with the HWE kernel(涉及新硬件等内容，虚拟机不选)
+English Continue without updating Ubuntu server
+Ubuntu server(minimized)
+最小安装，不方便后续使用，不推荐
+search for third-party drivers 推荐使用清华源
+Copyhttp://mirrors.tuna.tsinghua.edu.cn/ubuntu/其他源推荐(阿里云、中科大、网易)
+Copyhttp://mirrors.aliyun.com/ubuntu/http://mirrors.ustc.edu.cn/ubuntu/http://mirrors.163.com/ubuntu/安装截图那边带s（https）发现用不了，后修改为http（内网代理对 HTTP 的支持更完善，能有效避免 400 错误）">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-30T00:00:00+00:00">
+		<meta property="article:modified_time" content="2026-07-30T00:00:00+00:00">
+		<meta property="article:tag" content="Linux">
+		<meta property="article:tag" content="Ubuntu">
+
+	<meta itemprop="name" content="Linux安装过程记录（Ubuntu版本）">
+	<meta itemprop="description" content="安装信息如下：
+系统版本：Ubuntu-22.04.4-live-server-amd64
+点击链接下载镜像（清华镜像源）
+虚拟机版本：VMware WorkStation 17.5
+其他版本可能有所区别，仅供参考
+虚拟机参数配置： 内容 参数 内存 4GB 处理器数量 2 内核总数 4 硬盘 10GB 网络 NAT（后续视情况更改） 安装过程 Try or Install Ubuntu Serve(默认，直接选)
+Ubuntu Server with the HWE kernel(涉及新硬件等内容，虚拟机不选)
+English Continue without updating Ubuntu server
+Ubuntu server(minimized)
+最小安装，不方便后续使用，不推荐
+search for third-party drivers 推荐使用清华源
+Copyhttp://mirrors.tuna.tsinghua.edu.cn/ubuntu/其他源推荐(阿里云、中科大、网易)
+Copyhttp://mirrors.aliyun.com/ubuntu/http://mirrors.ustc.edu.cn/ubuntu/http://mirrors.163.com/ubuntu/安装截图那边带s（https）发现用不了，后修改为http（内网代理对 HTTP 的支持更完善，能有效避免 400 错误）">
+	<meta itemprop="datePublished" content="2026-07-30T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-07-30T00:00:00+00:00">
+	<meta itemprop="wordCount" content="137">
+	<meta itemprop="keywords" content="Linux,Ubuntu">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Linux安装过程记录（Ubuntu版本）">
+	<meta name="twitter:description" content="安装信息如下：
+系统版本：Ubuntu-22.04.4-live-server-amd64
+点击链接下载镜像（清华镜像源）
+虚拟机版本：VMware WorkStation 17.5
+其他版本可能有所区别，仅供参考
+虚拟机参数配置： 内容 参数 内存 4GB 处理器数量 2 内核总数 4 硬盘 10GB 网络 NAT（后续视情况更改） 安装过程 Try or Install Ubuntu Serve(默认，直接选)
+Ubuntu Server with the HWE kernel(涉及新硬件等内容，虚拟机不选)
+English Continue without updating Ubuntu server
+Ubuntu server(minimized)
+最小安装，不方便后续使用，不推荐
+search for third-party drivers 推荐使用清华源
+Copyhttp://mirrors.tuna.tsinghua.edu.cn/ubuntu/其他源推荐(阿里云、中科大、网易)
+Copyhttp://mirrors.aliyun.com/ubuntu/http://mirrors.ustc.edu.cn/ubuntu/http://mirrors.163.com/ubuntu/安装截图那边带s（https）发现用不了，后修改为http（内网代理对 HTTP 的支持更完善，能有效避免 400 错误）">
+
+	
+  </head><body class="ma0 avenir bg-near-white development is-page is-page page-260730_Linux安装过程记录">
+   
+  
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <header class="cover bg-center" style="background-image: url('http://localhost:1313/images/background.png');">
+    <div class="bg-black-60">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l center items-center justify-between">
+    <a href="/" class="f3 fw2 hover-white white-90 dib no-underline">
+      
+        codezm-cn的网络工程笔记
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/linux/" title="Linux服务器 page">
+              Linux服务器
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/kali/" title="网络安全 page">
+              网络安全
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/huawei/" title="华为ensp page">
+              华为ensp
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/h3c/" title="华三 page">
+              华三
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/other/" title="杂项 page">
+              杂项
+            </a>
+          </li>
+          
+        </ul>
+      
+      <div class="ananke-socials"></div>
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv6 ph3 ph4-ns">
+        
+          <div class="f2 f1-l fw2 white-90 mb0 lh-title">Linux安装过程记录（Ubuntu版本）</div>
+          
+        
+      </div>
+    </div>
+  </header>
+
+
+<main class="pb7" role="main">
+  
+
+  <article class="page-260730_Linux安装过程记录 flex-l mw7 center ph3 flex-wrap justify-between">
+    <header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked ttu">
+    <a class="link dim" href="http://localhost:1313/posts/"></a>
+  </aside><div id="sharing" class="mt3 ananke-socials"></div>
+<h1 class="f1 athelas mt3 mb1">Linux安装过程记录（Ubuntu版本）</h1>
+      
+      
+      
+      <time class="f6 mv4 dib tracked" datetime="2026-07-30T00:00:00Z">July 30, 2026</time>
+      
+
+      
+      
+    </header>
+    <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-100-l"><p>安装信息如下：</p>
+<p>系统版本：<a href="https://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/">Ubuntu-22.04.4-live-server-amd64</a></p>
+<blockquote>
+<p>点击链接下载镜像（清华镜像源）</p>
+</blockquote>
+<p>虚拟机版本：VMware WorkStation 17.5</p>
+<p><em>其他版本可能有所区别，仅供参考</em></p>
+<h4 id="虚拟机参数配置">虚拟机参数配置：</h4>
+<table>
+	<thead>
+			<tr>
+					<th style="text-align: center">内容</th>
+					<th style="text-align: center">参数</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td style="text-align: center">内存</td>
+					<td style="text-align: center">4GB</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">处理器数量</td>
+					<td style="text-align: center">2</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">内核总数</td>
+					<td style="text-align: center">4</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">硬盘</td>
+					<td style="text-align: center">10GB</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">网络</td>
+					<td style="text-align: center">NAT（后续视情况更改）</td>
+			</tr>
+	</tbody>
+</table>
+<h4 id="安装过程">安装过程</h4>
+<p><img src="/images/260730/1.png" alt="" title="安装选择"></p>
+<ul>
+<li>
+<p><input checked="" disabled="" type="checkbox"> Try or Install Ubuntu Serve(默认，直接选)</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Ubuntu Server with the HWE kernel(涉及新硬件等内容，虚拟机不选)</p>
+</li>
+</ul>
+<p><img src="/images/260730/2.png" alt="" title="语言选择"></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> English</li>
+</ul>
+<p><img src="/images/260730/3.png" alt="" title="更新提示"></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> Continue without updating</li>
+</ul>
+<p><img src="/images/260730/4.png" alt="" title="键盘设置"></p>
+<p><img src="/images/260730/5.png" alt="" title="安装方式"></p>
+<ul>
+<li>
+<p><input checked="" disabled="" type="checkbox"> Ubuntu server</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Ubuntu server(minimized)</p>
+</li>
+</ul>
+<blockquote>
+<p>最小安装，不方便后续使用，不推荐</p>
+</blockquote>
+<ul>
+<li><input disabled="" type="checkbox"> search for third-party drivers</li>
+</ul>
+<p><img src="/images/260730/6.png" alt="" title="网络配置"></p>
+<p><img src="/images/260730/7.png" alt="" title="代理配置"></p>
+<p>推荐使用清华源</p>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <pre tabindex="0"><code>http://mirrors.tuna.tsinghua.edu.cn/ubuntu/</code></pre>
+  </div><p>其他源推荐(阿里云、中科大、网易)</p>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <pre tabindex="0"><code>http://mirrors.aliyun.com/ubuntu/
+http://mirrors.ustc.edu.cn/ubuntu/
+http://mirrors.163.com/ubuntu/</code></pre>
+  </div><blockquote>
+<p>安装截图那边带s（https）发现用不了，后修改为http（内网代理对 HTTP 的支持更完善，能有效避免 400 错误）</p>
+</blockquote>
+<p><img src="/images/260730/8.png" alt="" title="磁盘分区配置"></p>
+<p><img src="/images/260730/9.png" alt="" title="分区具体配置"></p>
+<p>此时系统提示确认后无法返回重新配置，直接点continue</p>
+<p><img src="/images/260730/10.png" alt="" title="名称配置"></p>
+<p>有个Ubuntu pro安装，直接忽略</p>
+<p><img src="/images/260730/11.png" alt="" title="是否安装SSH"></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> Install OnenSSH server(便于后续使用客户端使用)</li>
+</ul>
+<p><img src="/images/260730/12.png" alt="" title="软件安装"></p>
+<p>建议跳过，后续根据需求再安装</p>
+<p><img src="/images/260730/13.png" alt="" title="安装完成"></p>
+<p>显示Reboot Now就是安装完成了！</p>
+<h4 id="附录软件安装页的软件是什么来自ai仅供参考">附录：软件安装页的软件是什么(来自AI，仅供参考)</h4>
+<table>
+	<thead>
+			<tr>
+					<th style="text-align: center">软件</th>
+					<th>是什么？</th>
+					<th>是否需要？</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td style="text-align: center">microk8s</td>
+					<td>轻量级 Kubernetes（容器编排）</td>
+					<td>❌ 不需要（太高级）</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">nextcloud</td>
+					<td>自建网盘服务</td>
+					<td>❌ 不需要（学习阶段）</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">wekan</td>
+					<td>看板工具</td>
+					<td>❌ 不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">canonical-livepatch</td>
+					<td>Ubuntu 的内核热补丁</td>
+					<td>⚠️ 可选（生产环境用）</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">rocketchat-server</td>
+					<td>即时通讯服务器</td>
+					<td>❌ 不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">mosquitto</td>
+					<td>MQTT 消息代理</td>
+					<td>✅ 未来有用（物联网相关）</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">etcd</td>
+					<td>分布式键值存储</td>
+					<td>❌ 不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">powershell</td>
+					<td>Windows PowerShell for Linux</td>
+					<td>❌ 不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">sabnzbd</td>
+					<td>下载工具</td>
+					<td>❌ 不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">wormhole</td>
+					<td>文件传输工具</td>
+					<td>❌ 不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">aws-cli, google-cloud-sdk</td>
+					<td>云平台命令行工具</td>
+					<td>⚠️ 后期学习云计算时有用</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">slicl, doctl</td>
+					<td>云服务商工具</td>
+					<td>❌ 当前不需要</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">keepalived</td>
+					<td>高可用 VIP（类似 VRRP）</td>
+					<td>✅ 以后学高可用/负载均衡会用到</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">prometheus</td>
+					<td>监控系统</td>
+					<td>✅ 学习监控时有用</td>
+			</tr>
+	</tbody>
+</table>
+<ul class="pa0">
+  
+   <li class="list di">
+     <a href="/categories/linux/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">Linux</a>
+   </li>
+  
+</ul><ul class="pa0">
+  
+   <li class="list di">
+     <a href="/tags/linux/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">Linux</a>
+   </li>
+  
+   <li class="list di">
+     <a href="/tags/ubuntu/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">Ubuntu</a>
+   </li>
+  
+</ul>
+
+      
+    </div></article>
+</main><footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="http://localhost:1313/" >
+    &copy;  codezm-cn的网络工程笔记 2026 
+  </a>
+    <div><div class="ananke-socials"></div>
+</div>
+  </div>
+</footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

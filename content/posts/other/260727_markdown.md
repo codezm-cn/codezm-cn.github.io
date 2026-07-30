@@ -22,7 +22,7 @@ categories=["other"]
 
 [链接用[title](url),例子为百度](https://www.baidu.com)
 
-![图片跟链接一样但是要多一个感叹号](/images/yuanshen.png "鼠标放置显示文字用双引号")
+![](/images/yuanshen.png "鼠标放置显示文字用双引号")
 ***
 ```Python
 print("代码块用三个’`‘包裹，记得加语言标识在第一个三个'`'")

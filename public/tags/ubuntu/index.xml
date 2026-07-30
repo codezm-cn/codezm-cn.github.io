@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 	<channel>
-		<title>Linux on codezm-cn的网络工程笔记</title>
-		<link>http://localhost:1313/tags/linux/</link>
-		<description>Recent content in Linux on codezm-cn的网络工程笔记</description>
+		<title>Ubuntu on codezm-cn的网络工程笔记</title>
+		<link>http://localhost:1313/tags/ubuntu/</link>
+		<description>Recent content in Ubuntu on codezm-cn的网络工程笔记</description>
 		<generator>Hugo</generator>
 		<language>zh-CN</language>
 		
@@ -12,7 +12,7 @@
 		
 			<lastBuildDate>Thu, 30 Jul 2026 00:00:00 +0000</lastBuildDate>
 		
-			<atom:link href="http://localhost:1313/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+			<atom:link href="http://localhost:1313/tags/ubuntu/index.xml" rel="self" type="application/rss+xml" />
 			<item>
 				<title>Linux安装过程记录（Ubuntu版本）</title>
 				<link>http://localhost:1313/posts/linux/260730_linux%E5%AE%89%E8%A3%85%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/</link>
