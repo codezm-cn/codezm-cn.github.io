@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>ENSP on codezm-cn的网络工程笔记</title>
+		<link>http://localhost:1313/tags/ensp/</link>
+		<description>Recent content in ENSP on codezm-cn的网络工程笔记</description>
+		<generator>Hugo</generator>
+		<language>zh-CN</language>
+		
+		
+		
+		
+			<lastBuildDate>Sun, 16 Aug 2026 00:00:00 +0000</lastBuildDate>
+		
+			<atom:link href="http://localhost:1313/tags/ensp/index.xml" rel="self" type="application/rss+xml" />
+			<item>
+				<title>FTP渗透测试</title>
+				<link>http://localhost:1313/posts/huawei/260816_ensp%E4%B8%ADcloud%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/</link>
+				<pubDate>Sun, 16 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>http://localhost:1313/posts/huawei/260816_ensp%E4%B8%ADcloud%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/</guid>
+				<description>&lt;p&gt;在学习网络工程师的过程中，ensp中的cloud一直让人疑惑，他是云服务器吗？怎么用？怎么设置接口？&lt;/p&gt;&#xA;&lt;p&gt;但实际cloud并不是连接云端，而是&lt;strong&gt;打通实体网络的通道，而不局限于ensp内部的设备&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;得知此功能后，我尝试通过ensp连接我的Ubuntu Linux虚拟机，下面是操作过程&lt;/p&gt;&#xA;&lt;p&gt;&lt;em&gt;本次的环境中，安装ensp的设备是虚拟机Windows 10（为了确保纯净的环境能正常启动）于是网卡均连接到vm中的NAT模式，确保在同一网段&lt;/em&gt;&lt;/p&gt;&#xA;&lt;p&gt;cloud的配置如图所示&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/260816/1.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;先创建udp端口，类型默认为eth或ge，第二个创建本地网卡，信息为ethernet0&lt;em&gt;不同设备可能不同，如果需要在visualbox配置的虚拟机需要将网卡设置为VirtualBox Host-Only Network #X&lt;/em&gt;&lt;/p&gt;&#xA;&lt;p&gt;入端口编号1，出端口编号2，![x] 双向通道,&lt;strong&gt;端口类型需与创建端口的一致&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;随后配置PC的IP &lt;strong&gt;（需与nat网段一致同时确保不冲突，可以提前查看Linux、主机的IP）&lt;/strong&gt;，启动设备即可&lt;/p&gt;&#xA;&lt;p&gt;可以先尝试ping安装ensp的主机，再到网关，最后再pingLinux或者其他设备&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/260816/2.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;&#xA;&lt;h4 id=&#34;无法连接的排查&#34;&gt;无法连接的排查：&lt;/h4&gt;&#xA;&lt;ol&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;使用&lt;code&gt;display interface brief&lt;/code&gt;检查接口是否全开**（可能有拓扑显示已连接但是接口是down的情况）**&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;使用抓包或&lt;code&gt;arp -a&lt;/code&gt;检测Windows设备是否有看见ensp的设备的ip&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;尝试关闭Windows防火墙&lt;em&gt;注意内网环境安全关闭&lt;/em&gt;，或者其他杀毒软件&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ol&gt;&#xA;&lt;p&gt;4.尝试重启设备或ensp ~ 可能是ensp的bug或visualbox异常 ~&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;h3 id=&#34;补充笔记&#34;&gt;补充笔记&lt;/h3&gt;&#xA;&lt;p&gt;&lt;code&gt;display current-configuration&lt;/code&gt;显示比较详细的信息，如默认的设置（设备名、cluster集群 ntdp路由交换 ndp邻居发现、aaa用户配置、接口情况）&lt;/p&gt;&#xA;&lt;p&gt;&lt;code&gt;display this&lt;/code&gt;能简化一些，或者看当前配置下的操作配置&lt;/p&gt;&#xA;&lt;p&gt;&lt;code&gt;display interface &lt;/code&gt;可以看接口状态，和该设备的mac地址（hardware address）&lt;/p&gt;&#xA;&lt;p&gt;&lt;code&gt;display interface brief&lt;/code&gt;可以看接口是否开启关闭&lt;/p&gt;</description>
+			</item>
+	</channel>
+</rss>

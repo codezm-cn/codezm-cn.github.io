@@ -113,8 +113,8 @@
 	<meta property="og:type" content="website">
 
 	<meta itemprop="name" content="华为">
-	<meta itemprop="datePublished" content="2026-07-27T00:00:00+00:00">
-	<meta itemprop="dateModified" content="2026-07-27T00:00:00+00:00">
+	<meta itemprop="datePublished" content="2026-08-16T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-08-16T00:00:00+00:00">
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="华为">
 
@@ -133,6 +133,40 @@
     <div class="flex-l items-center">
       
 
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/linux/" title="Linux服务器 page">
+              Linux服务器
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/kali/" title="网络安全 page">
+              网络安全
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/huawei/" title="华为ensp page">
+              华为ensp
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/h3c/" title="华三 page">
+              华三
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/other/" title="杂项 page">
+              杂项
+            </a>
+          </li>
+          
+        </ul>
       
       <div class="ananke-socials"></div>
 
@@ -162,19 +196,48 @@
           
 <div class="w-100 mb4 nested-copy-line-height relative bg-white">
   <div class="mb3 pa4 gray overflow-hidden bg-white">
-    <span class="f6 db">codezm-cn的网络工程笔记</span>
     
-      <time class="f6 db" datetime="2026-07-27T00:00:00Z">July 27, 2026</time>
+    
+      <time class="f6 db" datetime="2026-08-16T00:00:00Z">August 16, 2026</time>
     
     <h1 class="f3 near-black">
-      <a href="/posts/" class="link black dim">
-        华为
+      <a href="/posts/huawei/260816_ensp%E4%B8%ADcloud%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" class="link black dim">
+        FTP渗透测试
       </a>
     </h1>
     <div class="nested-links f5 lh-copy nested-copy-line-height">
-      <p>12345</p>
+      <p>在学习网络工程师的过程中，ensp中的cloud一直让人疑惑，他是云服务器吗？怎么用？怎么设置接口？</p>
+<p>但实际cloud并不是连接云端，而是<strong>打通实体网络的通道，而不局限于ensp内部的设备</strong></p>
+<p>得知此功能后，我尝试通过ensp连接我的Ubuntu Linux虚拟机，下面是操作过程</p>
+<p><em>本次的环境中，安装ensp的设备是虚拟机Windows 10（为了确保纯净的环境能正常启动）于是网卡均连接到vm中的NAT模式，确保在同一网段</em></p>
+<p>cloud的配置如图所示</p>
+<p><img src="/images/260816/1.png" alt=""></p>
+<p>先创建udp端口，类型默认为eth或ge，第二个创建本地网卡，信息为ethernet0<em>不同设备可能不同，如果需要在visualbox配置的虚拟机需要将网卡设置为VirtualBox Host-Only Network #X</em></p>
+<p>入端口编号1，出端口编号2，![x] 双向通道,<strong>端口类型需与创建端口的一致</strong></p>
+<p>随后配置PC的IP <strong>（需与nat网段一致同时确保不冲突，可以提前查看Linux、主机的IP）</strong>，启动设备即可</p>
+<p>可以先尝试ping安装ensp的主机，再到网关，最后再pingLinux或者其他设备</p>
+<p><img src="/images/260816/2.png" alt=""></p>
+<h4 id="无法连接的排查">无法连接的排查：</h4>
+<ol>
+<li>
+<p>使用<code>display interface brief</code>检查接口是否全开**（可能有拓扑显示已连接但是接口是down的情况）**</p>
+</li>
+<li>
+<p>使用抓包或<code>arp -a</code>检测Windows设备是否有看见ensp的设备的ip</p>
+</li>
+<li>
+<p>尝试关闭Windows防火墙<em>注意内网环境安全关闭</em>，或者其他杀毒软件</p>
+</li>
+</ol>
+<p>4.尝试重启设备或ensp ~ 可能是ensp的bug或visualbox异常 ~</p>
+<hr>
+<h3 id="补充笔记">补充笔记</h3>
+<p><code>display current-configuration</code>显示比较详细的信息，如默认的设置（设备名、cluster集群 ntdp路由交换 ndp邻居发现、aaa用户配置、接口情况）</p>
+<p><code>display this</code>能简化一些，或者看当前配置下的操作配置</p>
+<p><code>display interface </code>可以看接口状态，和该设备的mac地址（hardware address）</p>
+<p><code>display interface brief</code>可以看接口是否开启关闭</p>
     </div>
-    <a href="/posts/" class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+    <a href="/posts/huawei/260816_ensp%E4%B8%ADcloud%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
   </div>
 </div>
 
@@ -193,33 +256,6 @@
 </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
