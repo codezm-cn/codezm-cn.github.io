@@ -1,7 +1,7 @@
 +++
 date = '2026-08-16'
 draft = false
-title = 'FTP渗透测试'
+title = 'ENSP中cloud的使用教程'
 tags= ["ENSP","华为"] 
 categories=["Huawei"]
 featured_image =  '/images/260816/0.png'
