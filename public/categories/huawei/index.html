@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     
@@ -11,11 +11,11 @@
     
     
     
-      <meta name="robots" content="noindex, nofollow">
+      <meta name="robots" content="index, follow">
     
     
 
-    <link rel="stylesheet" href="/ananke/css/main.css">
+    <link rel="stylesheet" href="/ananke/css/main.02a37ad6c4e155c542d276915a0e3f83f5c7c5fec443350f6e60753f1679b7a7.css" integrity="sha256-AqN61sThVcVC0naRWg4/g/XHxf7EQzUPbmB1PxZ5t6c=" crossorigin="anonymous">
     <script>
   (function () {
     "use strict";
@@ -101,25 +101,28 @@
     
 
     
-      <link rel="canonical" href="http://localhost:1313/categories/huawei/">
+      <link rel="canonical" href="https://codezm-cn.github.io/categories/huawei/">
     
 
     
     
-    <meta property="og:url" content="http://localhost:1313/categories/huawei/">
+    <meta property="og:url" content="https://codezm-cn.github.io/categories/huawei/">
 	<meta property="og:site_name" content="codezm-cn的网络工程笔记">
 	<meta property="og:title" content="Huawei">
 	<meta property="og:locale" content="zh_CN">
 	<meta property="og:type" content="website">
 
 	<meta itemprop="name" content="Huawei">
-	<meta itemprop="datePublished" content="2026-08-16T00:00:00+00:00">
-	<meta itemprop="dateModified" content="2026-08-16T00:00:00+00:00">
+	<meta itemprop="datePublished" content="2026-08-29T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-08-29T00:00:00+00:00">
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="Huawei">
 
+      
+      
+    
 	
-  </head><body class="ma0 avenir bg-near-white development is-term">
+  </head><body class="ma0 avenir bg-near-white production is-term">
 
   <header>
     <div class="pb3-m pb6-l bg-black">
@@ -198,11 +201,131 @@
   <div class="mb3 pa4 gray overflow-hidden bg-white">
     
     
+      <time class="f6 db" datetime="2026-08-29T00:00:00Z">August 29, 2026</time>
+    
+    <h1 class="f3 near-black">
+      <a href="/posts/huawei/260825_%E6%B5%85%E8%B0%88%E5%9B%9B%E4%B8%AA%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E4%BB%A5%E5%8F%8A%E5%85%B6%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B/" class="link black dim">
+        浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      <h3 id="常见路由协议简介与要点">常见路由协议简介与要点</h3>
+<h4 id="1-rip">1. RIP</h4>
+<p>全称<strong>路由信息协议，Routing Information Protocol</strong></p>
+<p>其使用跳数（Hop Count）来衡量到达目的地址的距离，称为度量值。在缺省情况下，路由设备到与它直接相连网络的跳数为0，通过一个路由设备可达的网络的跳数为1。也就是说，度量值等于从本网络到达目的网络间的路由设备数量。</p>
+<p>为限制收敛时间，RIP规定度量值取0～15之间的整数，大于或等于 <strong>16</strong> 的跳数被定义为目的网络或主机不可达（Network Unreachable）。由于这个限制，使得RIP不可能在大型网络中得到应用。</p>
+<p>RIP 路由器默认每 <strong>30</strong> 秒使用UDP520端口发送一次路由表，如果在 <strong>180</strong> 秒之内没有收到路由的更新，则将该路由置为无效，在 <strong>120</strong> 秒内还没收到这条路由的更新，就从路由表中将该路由删除。</p>
+<h4 id="2-ospf">2. OSPF</h4>
+<p>全称<strong>开放式最短路径优先，Open Shortest Path First</strong></p>
+<p>其通过在自治系统（AS，autonomous system）中<strong>划分区域</strong>（骨干、普通、末梢STUB）和选举主备路由器DR和BDR，利用<strong>Dijkstra最短路径算法</strong>生成最短路径树，建立并维护<strong>链路状态数据库（LSDB,Link State Database）</strong>。</p>
+<p>OSPF用IP报文直接封装协议报文，协议号为89。OSPF分为5种报文：<strong>Hello报文、DD报文、LSR报文、LSU报文和LSAck报文</strong>，翻译下来分别是哈喽报文、数据库描述报文、链路状态请求报文、链路状态更新报文、链路状态确认报文。</p>
+<p><em><strong>注意区分LSA（链路状态通告）和LSAck，LSA是链路状态信息，被封装在DD、LSU报文中传递；LSR用来请求LSA，LSAck用来确认LSA。</strong></em></p>
+<h3 id="3-is-is">3. IS-IS</h3>
+<p>全称<strong>中间系统到中间系统，Intermediate system to intermediate system</strong></p>
+<p>其特性与OSPF有一定关系：是一种链路状态协议，使用最短路径优先SPF算法进行路由计算，选举DIS和非DIS（与OSPF中的DR和BDR类似）。</p>
+<p>分为三种路由器：L1路由器、L2路由器和L1/L2路由器。其中，L1路由器是为端系统直接提供服务的路由器，L2路由器是骨干路由器。L1/L2 路由器负责把 <strong>L1 区域的路由泄露/汇总进 L2 骨干</strong>，同时向 L1 区域<strong>自动下发一条默认路由</strong>，形似桥梁。</p>
+<p>分为三种报文：HELLO PDU（Protocol Data Unit）、LSP（Link State PDUs）和SNP（Sequence Number PDUs）翻译为Hello报文、链路状态报文、序列号报文。</p>
+<p>适用于大型运营商。</p>
+<h4 id="4-bgp">4. BGP</h4>
+<p>全称<strong>边界网关协议，Border Gateway Protocol</strong></p>
+<p>其使用<strong>TCP179</strong>端口作为其传输层协议，通过自治系统（AS）的内外关系分为内部（Internal）BGP和外部（External）BGP，也就是常说的<strong>IBGP、EBGP</strong>。</p>
+<h4 id="5-分类与关系">5. 分类与关系</h4>
+<p>分类如下图所示：</p>
+<p><img src="/images/260826/1.png" alt=""></p>
+<table>
+	<thead>
+			<tr>
+					<th style="text-align: center">特性</th>
+					<th style="text-align: center">OSPF</th>
+					<th style="text-align: center">RIP</th>
+					<th style="text-align: center">BGP</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td style="text-align: center">协议类型</td>
+					<td style="text-align: center">链路状态协议</td>
+					<td style="text-align: center">距离矢量协议</td>
+					<td style="text-align: center">路径矢量协议</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">承载协议</td>
+					<td style="text-align: center">IP</td>
+					<td style="text-align: center">UDP(520)</td>
+					<td style="text-align: center">TCP(179)</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由算法</td>
+					<td style="text-align: center">Dijkstra算法</td>
+					<td style="text-align: center">距离矢量算法</td>
+					<td style="text-align: center">路径向量算法</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由更新机制</td>
+					<td style="text-align: center">链路状态变化时触发更新</td>
+					<td style="text-align: center">周期性更新(30秒)，变化时触发更新</td>
+					<td style="text-align: center">增量更新，仅在路由变化时发送</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由表维护</td>
+					<td style="text-align: center">维护完整LSDB</td>
+					<td style="text-align: center">维护完整路由表</td>
+					<td style="text-align: center">仅维护最优路由表</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">防环机制</td>
+					<td style="text-align: center">SPF算法</td>
+					<td style="text-align: center">水平分割、毒性逆转</td>
+					<td style="text-align: center">AS路径检查</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">度量标准</td>
+					<td style="text-align: center">成本(Cost，基于带宽)</td>
+					<td style="text-align: center">跳数(Hop Count)</td>
+					<td style="text-align: center">AS路径长度、本地优先级等</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">网络规模</td>
+					<td style="text-align: center">中大型网络(数百台路由器)</td>
+					<td style="text-align: center">小型网络(≤15跳)</td>
+					<td style="text-align: center">超大型网络(互联网级)</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">收敛速度</td>
+					<td style="text-align: center">快</td>
+					<td style="text-align: center">慢</td>
+					<td style="text-align: center">较慢</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由更新开销</td>
+					<td style="text-align: center">中等(仅更新变化部分)</td>
+					<td style="text-align: center">高(发送完整路由表)</td>
+					<td style="text-align: center">低(增量更新)</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h3 id="ensp中的配置">ENSP中的配置</h3>
+<h4 id="rip-的配置">RIP 的配置</h4>
+<p>拓扑图如图：</p>
+    </div>
+    <a href="/posts/huawei/260825_%E6%B5%85%E8%B0%88%E5%9B%9B%E4%B8%AA%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E4%BB%A5%E5%8F%8A%E5%85%B6%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B/" class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+  </div>
+</div>
+
+        </div>
+      
+        <div class="w-100 w-30-l mb4 relative bg-white">
+          
+<div class="w-100 mb4 nested-copy-line-height relative bg-white">
+  <div class="mb3 pa4 gray overflow-hidden bg-white">
+    
+    
       <time class="f6 db" datetime="2026-08-16T00:00:00Z">August 16, 2026</time>
     
     <h1 class="f3 near-black">
       <a href="/posts/huawei/260816_ensp%E4%B8%ADcloud%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" class="link black dim">
-        FTP渗透测试
+        ENSP中cloud的使用教程
       </a>
     </h1>
     <div class="nested-links f5 lh-copy nested-copy-line-height">
@@ -254,7 +377,7 @@
     </article>
 </main><footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
   <div class="flex justify-between">
-  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="http://localhost:1313/" >
+  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="https://codezm-cn.github.io/" >
     &copy;  codezm-cn的网络工程笔记 2026 
   </a>
     <div><div class="ananke-socials"></div>
@@ -263,699 +386,6 @@
 </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

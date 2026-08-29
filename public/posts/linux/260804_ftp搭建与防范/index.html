@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     
@@ -48,11 +48,11 @@ ssl_enable=NO
     
     
     
-      <meta name="robots" content="noindex, nofollow">
+      <meta name="robots" content="index, follow">
     
     
 
-    <link rel="stylesheet" href="/ananke/css/main.css">
+    <link rel="stylesheet" href="/ananke/css/main.02a37ad6c4e155c542d276915a0e3f83f5c7c5fec443350f6e60753f1679b7a7.css" integrity="sha256-AqN61sThVcVC0naRWg4/g/XHxf7EQzUPbmB1PxZ5t6c=" crossorigin="anonymous">
     <script>
   (function () {
     "use strict";
@@ -133,12 +133,12 @@ ssl_enable=NO
     
 
     
-      <link rel="canonical" href="http://localhost:1313/posts/linux/260804_ftp%E6%90%AD%E5%BB%BA%E4%B8%8E%E9%98%B2%E8%8C%83/">
+      <link rel="canonical" href="https://codezm-cn.github.io/posts/linux/260804_ftp%E6%90%AD%E5%BB%BA%E4%B8%8E%E9%98%B2%E8%8C%83/">
     
 
     
     
-    <meta property="og:url" content="http://localhost:1313/posts/linux/260804_ftp%E6%90%AD%E5%BB%BA%E4%B8%8E%E9%98%B2%E8%8C%83/">
+    <meta property="og:url" content="https://codezm-cn.github.io/posts/linux/260804_ftp%E6%90%AD%E5%BB%BA%E4%B8%8E%E9%98%B2%E8%8C%83/">
 	<meta property="og:site_name" content="codezm-cn的网络工程笔记">
 	<meta property="og:title" content="FTP搭建与防范">
 	<meta property="og:description" content="搭建FTP服务器时，FTP协议默认以明文传输用户名、密码和文件内容，极易被同网段设备嗅探窃取。若需安全传输，应优先采用SFTP（基于SSH加密）替代传统FTP。
@@ -167,8 +167,11 @@ Copylisten=NO # 独立模式 listen_ipv6=YES anonymous_enable=NO # 匿名登录
 FTP基础搭建指令 Copy#安装vsftpd sudo apt install vsftpd -y sudo systemctl enable vsftpd #自启动 sudo systemctl start vsftpd #启动服务 #创建一个ftp用户 sudo adduser ftpuser --disabled-password --gecos &#34;&#34; # 创建无密码登录权限的用户 sudo passwd ftpuser # 设置密码（实验用，实际环境需强密码） sudo mkdir -p /srv/ftp # 主目录 sudo chown ftpuser:ftpuser /srv/ftp # 文件权限设置 sudo chmod 755 /srv/ftp # 读写权限 sudo mkdir -p /srv/ftp/data # 正常上传修改下载的目录 sudo chown ftpuser:ftpuser /srv/ftp/data sudo chmod 755 /srv/ftp/data其中配置文件 /etc/vsftpd.conf 配置：
 Copylisten=NO # 独立模式 listen_ipv6=YES anonymous_enable=NO # 匿名登录 local_enable=YES write_enable=YES chroot_local_user=YES # 主目录限制 secure_chroot_dir=/var/run/vsftpd/empty # 环境设置 local_root=/srv/ftp # ftp主文件夹 xferlog_enable=YES connect_from_port_20=YES ssl_enable=NO随后可以用Windows资源管理器/MT管理器（安卓）访问，需要输入账号（ftpuser）和密码">
 
+      
+      
+    
 	
-  </head><body class="ma0 avenir bg-near-white development is-page is-page page-260804_ftp搭建与防范">
+  </head><body class="ma0 avenir bg-near-white production is-page is-page page-260804_ftp搭建与防范">
    
   
 
@@ -182,7 +185,7 @@ Copylisten=NO # 独立模式 listen_ipv6=YES anonymous_enable=NO # 匿名登录
   
   
   
-  <header class="cover bg-center" style="background-image: url('http://localhost:1313/images/260804/3.png');">
+  <header class="cover bg-center" style="background-image: url('https://codezm-cn.github.io/images/260804/3.png');">
     <div class="bg-black-60">
       <nav class="pv3 ph3 ph4-ns" role="navigation">
   <div class="flex-l center items-center justify-between">
@@ -250,7 +253,7 @@ Copylisten=NO # 独立模式 listen_ipv6=YES anonymous_enable=NO # 匿名登录
 
   <article class="page-260804_ftp搭建与防范 flex-l mw7 center ph3 flex-wrap justify-between">
     <header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked ttu">
-    <a class="link dim" href="http://localhost:1313/posts/"></a>
+    <a class="link dim" href="https://codezm-cn.github.io/posts/"></a>
   </aside><div id="sharing" class="mt3 ananke-socials"></div>
 <h1 class="f1 athelas mt3 mb1">FTP搭建与防范</h1>
       
@@ -365,7 +368,7 @@ Copylisten=NO # 独立模式 listen_ipv6=YES anonymous_enable=NO # 匿名登录
     </div></article>
 </main><footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
   <div class="flex justify-between">
-  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="http://localhost:1313/" >
+  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="https://codezm-cn.github.io/" >
     &copy;  codezm-cn的网络工程笔记 2026 
   </a>
     <div><div class="ananke-socials"></div>
@@ -374,6 +377,15 @@ Copylisten=NO # 独立模式 listen_ipv6=YES anonymous_enable=NO # 匿名登录
 </footer>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
 

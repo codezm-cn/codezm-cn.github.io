@@ -1,0 +1,81 @@
+[LSW1]vlan batch 10 110
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[LSW1]int vlanif 10
+[LSW1-Vlanif10]ip a 192.168.1.1 24
+[LSW1-Vlanif10]int vlanif 110
+[LSW1-Vlanif110]ip a 110.1.1.2 30
+[LSW1-Vlanif110]quit
+[LSW1]int g 0/0/1
+[LSW1-GigabitEthernet0/0/1]po  li a
+[LSW1-GigabitEthernet0/0/1]po de vlan 110
+[LSW1-GigabitEthernet0/0/1]int g 0/0/3
+[LSW1-GigabitEthernet0/0/3]po li a
+[LSW1-GigabitEthernet0/0/3]po de vlan 10
+[LSW1-GigabitEthernet0/0/3]quit
+[LSW1]rip 1
+[LSW1-rip-1]version 2
+[LSW1-rip-1]net 192.168.1.0
+[LSW1-rip-1]net 110.0.0.0
+[LSW1-rip-1]quit
+
+[LSW2]vlan batch 20 120
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[LSW2]int vlanif 20
+[LSW2-Vlanif20]ip a 192.168.2.1 24
+[LSW2-Vlanif20]int vlanif 120
+[LSW2-Vlanif120]ip a 120.1.1.2 30
+[LSW2-Vlanif120]quit
+[LSW2]int g 0/0/1
+[LSW2-GigabitEthernet0/0/1]po li a
+[LSW2-GigabitEthernet0/0/1]po de v 120
+[LSW2-GigabitEthernet0/0/1]int g 0/0/3
+[LSW2-GigabitEthernet0/0/3]po li a
+[LSW2-GigabitEthernet0/0/3]po de v 20
+[LSW2-GigabitEthernet0/0/3]quit
+[LSW2]rip 1
+[LSW2-rip-1]version 2
+[LSW2-rip-1]net 192.168.2.0
+[LSW2-rip-1]net 120.0.0.0
+[LSW2-rip-1]quit
+
+[AR1]int g 0/0/0
+[AR1-GigabitEthernet0/0/0]ip a 100.1.1.2 30
+[AR1-GigabitEthernet0/0/0]int g 0/0/1
+[AR1-GigabitEthernet0/0/1]ip a 110.1.1.1 30
+[AR1-GigabitEthernet0/0/1]int g 0/0/2
+[AR1-GigabitEthernet0/0/2]ip a 101.1.1.1 30
+[AR1-GigabitEthernet0/0/2]quit
+[AR1]rip 1
+[AR1-rip-1]ve 2
+[AR1-rip-1]net 100.0.0.0
+[AR1-rip-1]net 101.0.0.0
+[AR1-rip-1]net 110.0.0.0
+[AR1-rip-1]quit
+
+[AR2]int g 0/0/0
+[AR2-GigabitEthernet0/0/0]ip a 100.1.2.2 30
+[AR2-GigabitEthernet0/0/0]quit
+[AR2]int g 0/0/1
+[AR2-GigabitEthernet0/0/1]ip a 120.1.1.1 30
+[AR2-GigabitEthernet0/0/1]int g 0/0/2
+[AR2-GigabitEthernet0/0/2]ip a 101.1.1.2 30
+[AR2-GigabitEthernet0/0/2]quit
+[AR2]rip 1
+[AR2-rip-1]version 2
+[AR2-rip-1]net 100.0.0.0
+[AR2-rip-1]net 101.0.0.0
+[AR2-rip-1]net 120.0.0.0
+[AR2-rip-1]quit
+
+[AR3]int g 0/0/0
+[AR3-GigabitEthernet0/0/0]ip a 1.1.1.1 8
+[AR3-GigabitEthernet0/0/0]int g 0/0/1
+[AR3-GigabitEthernet0/0/1]ip a 100.1.1.1 30
+[AR3-GigabitEthernet0/0/1]int g 0/0/2
+[AR3-GigabitEthernet0/0/2]ip a 100.1.2.1 30
+[AR3-GigabitEthernet0/0/2]quit
+[AR3]rip 1
+[AR3-rip-1]version 2
+[AR3-rip-1]net 1.0.0.0
+[AR3-rip-1]net 100.0.0.0
+[AR3-rip-1]quit

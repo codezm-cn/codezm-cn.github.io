@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程 | codezm-cn的网络工程笔记</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="常见路由协议简介与要点
+1. RIP
+全称路由信息协议，Routing Information Protocol
+其使用跳数（Hop Count）来衡量到达目的地址的距离，称为度量值。在缺省情况下，路由设备到与它直接相连网络的跳数为0，通过一个路由设备可达的网络的跳数为1。也就是说，度量值等于从本网络到达目的网络间的路由设备数量。
+为限制收敛时间，RIP规定度量值取0～15之间的整数，大于或等于 16 的跳数被定义为目的网络或主机不可达（Network Unreachable）。由于这个限制，使得RIP不可能在大型网络中得到应用。
+RIP 路由器默认每 30 秒使用UDP520端口发送一次路由表，如果在 180 秒之内没有收到路由的更新，则将该路由置为无效，在 120 秒内还没收到这条路由的更新，就从路由表中将该路由删除。
+2. OSPF
+全称开放式最短路径优先，Open Shortest Path First
+其通过在自治系统（AS，autonomous system）中划分区域（骨干、普通、末梢STUB）和选举主备路由器DR和BDR，利用Dijkstra最短路径算法生成最短路径树，建立并维护链路状态数据库（LSDB,Link State Database）。
+OSPF用IP报文直接封装协议报文，协议号为89。OSPF分为5种报文：Hello报文、DD报文、LSR报文、LSU报文和LSAck报文，翻译下来分别是哈喽报文、数据库描述报文、链路状态请求报文、链路状态更新报文、链路状态确认报文。
+注意区分LSA（链路状态通告）和LSAck，LSA是链路状态信息，被封装在DD、LSU报文中传递；LSR用来请求LSA，LSAck用来确认LSA。
+3. IS-IS
+全称中间系统到中间系统，Intermediate system to intermediate system
+其特性与OSPF有一定关系：是一种链路状态协议，使用最短路径优先SPF算法进行路由计算，选举DIS和非DIS（与OSPF中的DR和BDR类似）。
+分为三种路由器：L1路由器、L2路由器和L1/L2路由器。其中，L1路由器是为端系统直接提供服务的路由器，L2路由器是骨干路由器。L1/L2 路由器负责把 L1 区域的路由泄露/汇总进 L2 骨干，同时向 L1 区域自动下发一条默认路由，形似桥梁。
+分为三种报文：HELLO PDU（Protocol Data Unit）、LSP（Link State PDUs）和SNP（Sequence Number PDUs）翻译为Hello报文、链路状态报文、序列号报文。
+适用于大型运营商。
+4. BGP
+全称边界网关协议，Border Gateway Protocol
+其使用TCP179端口作为其传输层协议，通过自治系统（AS）的内外关系分为内部（Internal）BGP和外部（External）BGP，也就是常说的IBGP、EBGP。
+5. 分类与关系
+分类如下图所示：
+
+
+	
+			
+					特性
+					OSPF
+					RIP
+					BGP
+			
+	
+	
+			
+					协议类型
+					链路状态协议
+					距离矢量协议
+					路径矢量协议
+			
+			
+					承载协议
+					IP
+					UDP(520)
+					TCP(179)
+			
+			
+					路由算法
+					Dijkstra算法
+					距离矢量算法
+					路径向量算法
+			
+			
+					路由更新机制
+					链路状态变化时触发更新
+					周期性更新(30秒)，变化时触发更新
+					增量更新，仅在路由变化时发送
+			
+			
+					路由表维护
+					维护完整LSDB
+					维护完整路由表
+					仅维护最优路由表
+			
+			
+					防环机制
+					SPF算法
+					水平分割、毒性逆转
+					AS路径检查
+			
+			
+					度量标准
+					成本(Cost，基于带宽)
+					跳数(Hop Count)
+					AS路径长度、本地优先级等
+			
+			
+					网络规模
+					中大型网络(数百台路由器)
+					小型网络(≤15跳)
+					超大型网络(互联网级)
+			
+			
+					收敛速度
+					快
+					慢
+					较慢
+			
+			
+					路由更新开销
+					中等(仅更新变化部分)
+					高(发送完整路由表)
+					低(增量更新)
+			
+	
+
+
+ENSP中的配置
+RIP 的配置
+拓扑图如图：">
+    <meta name="generator" content="Hugo 0.164.0">
+    
+    
+    
+      <meta name="robots" content="index, follow">
+    
+    
+
+    <link rel="stylesheet" href="/ananke/css/main.02a37ad6c4e155c542d276915a0e3f83f5c7c5fec443350f6e60753f1679b7a7.css" integrity="sha256-AqN61sThVcVC0naRWg4/g/XHxf7EQzUPbmB1PxZ5t6c=" crossorigin="anonymous">
+    <script>
+  (function () {
+    "use strict";
+
+    
+    
+    function revealButtons() {
+      var buttons = document.querySelectorAll(".code-block .code-copy[hidden]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].hidden = false;
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", revealButtons);
+    } else {
+      revealButtons();
+    }
+
+    function flash(button) {
+      var label = button.querySelector(".code-copy-label");
+      var previous = label ? label.textContent : null;
+      button.classList.add("is-copied");
+      if (label) label.textContent = "Copied";
+      window.setTimeout(function () {
+        button.classList.remove("is-copied");
+        if (label && previous !== null) label.textContent = previous;
+      }, 2000);
+    }
+
+    function legacyCopy(text) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(area);
+      return ok;
+    }
+
+    function copyFrom(button) {
+      var container = button.closest(".code-block");
+      if (!container) return;
+      var pre = container.querySelector("pre");
+      if (!pre) return;
+      var source = pre.querySelector("code") || pre;
+      var text = source.innerText;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { flash(button); },
+          function () { if (legacyCopy(text)) flash(button); }
+        );
+      } else if (legacyCopy(text)) {
+        flash(button);
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      var button = event.target.closest(".code-copy");
+      if (button) copyFrom(button);
+    });
+  })();
+</script>
+
+    
+      
+
+    
+
+    
+
+    
+      <link rel="canonical" href="https://codezm-cn.github.io/posts/huawei/260825_%E6%B5%85%E8%B0%88%E5%9B%9B%E4%B8%AA%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E4%BB%A5%E5%8F%8A%E5%85%B6%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B/">
+    
+
+    
+    
+    <meta property="og:url" content="https://codezm-cn.github.io/posts/huawei/260825_%E6%B5%85%E8%B0%88%E5%9B%9B%E4%B8%AA%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E4%BB%A5%E5%8F%8A%E5%85%B6%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B/">
+	<meta property="og:site_name" content="codezm-cn的网络工程笔记">
+	<meta property="og:title" content="浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程">
+	<meta property="og:description" content="常见路由协议简介与要点 1. RIP 全称路由信息协议，Routing Information Protocol
+其使用跳数（Hop Count）来衡量到达目的地址的距离，称为度量值。在缺省情况下，路由设备到与它直接相连网络的跳数为0，通过一个路由设备可达的网络的跳数为1。也就是说，度量值等于从本网络到达目的网络间的路由设备数量。
+为限制收敛时间，RIP规定度量值取0～15之间的整数，大于或等于 16 的跳数被定义为目的网络或主机不可达（Network Unreachable）。由于这个限制，使得RIP不可能在大型网络中得到应用。
+RIP 路由器默认每 30 秒使用UDP520端口发送一次路由表，如果在 180 秒之内没有收到路由的更新，则将该路由置为无效，在 120 秒内还没收到这条路由的更新，就从路由表中将该路由删除。
+2. OSPF 全称开放式最短路径优先，Open Shortest Path First
+其通过在自治系统（AS，autonomous system）中划分区域（骨干、普通、末梢STUB）和选举主备路由器DR和BDR，利用Dijkstra最短路径算法生成最短路径树，建立并维护链路状态数据库（LSDB,Link State Database）。
+OSPF用IP报文直接封装协议报文，协议号为89。OSPF分为5种报文：Hello报文、DD报文、LSR报文、LSU报文和LSAck报文，翻译下来分别是哈喽报文、数据库描述报文、链路状态请求报文、链路状态更新报文、链路状态确认报文。
+注意区分LSA（链路状态通告）和LSAck，LSA是链路状态信息，被封装在DD、LSU报文中传递；LSR用来请求LSA，LSAck用来确认LSA。
+3. IS-IS 全称中间系统到中间系统，Intermediate system to intermediate system
+其特性与OSPF有一定关系：是一种链路状态协议，使用最短路径优先SPF算法进行路由计算，选举DIS和非DIS（与OSPF中的DR和BDR类似）。
+分为三种路由器：L1路由器、L2路由器和L1/L2路由器。其中，L1路由器是为端系统直接提供服务的路由器，L2路由器是骨干路由器。L1/L2 路由器负责把 L1 区域的路由泄露/汇总进 L2 骨干，同时向 L1 区域自动下发一条默认路由，形似桥梁。
+分为三种报文：HELLO PDU（Protocol Data Unit）、LSP（Link State PDUs）和SNP（Sequence Number PDUs）翻译为Hello报文、链路状态报文、序列号报文。
+适用于大型运营商。
+4. BGP 全称边界网关协议，Border Gateway Protocol
+其使用TCP179端口作为其传输层协议，通过自治系统（AS）的内外关系分为内部（Internal）BGP和外部（External）BGP，也就是常说的IBGP、EBGP。
+5. 分类与关系 分类如下图所示：
+特性 OSPF RIP BGP 协议类型 链路状态协议 距离矢量协议 路径矢量协议 承载协议 IP UDP(520) TCP(179) 路由算法 Dijkstra算法 距离矢量算法 路径向量算法 路由更新机制 链路状态变化时触发更新 周期性更新(30秒)，变化时触发更新 增量更新，仅在路由变化时发送 路由表维护 维护完整LSDB 维护完整路由表 仅维护最优路由表 防环机制 SPF算法 水平分割、毒性逆转 AS路径检查 度量标准 成本(Cost，基于带宽) 跳数(Hop Count) AS路径长度、本地优先级等 网络规模 中大型网络(数百台路由器) 小型网络(≤15跳) 超大型网络(互联网级) 收敛速度 快 慢 较慢 路由更新开销 中等(仅更新变化部分) 高(发送完整路由表) 低(增量更新) ENSP中的配置 RIP 的配置 拓扑图如图：">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-29T00:00:00+00:00">
+		<meta property="article:modified_time" content="2026-08-29T00:00:00+00:00">
+		<meta property="article:tag" content="ENSP">
+		<meta property="article:tag" content="路由协议">
+
+	<meta itemprop="name" content="浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程">
+	<meta itemprop="description" content="常见路由协议简介与要点 1. RIP 全称路由信息协议，Routing Information Protocol
+其使用跳数（Hop Count）来衡量到达目的地址的距离，称为度量值。在缺省情况下，路由设备到与它直接相连网络的跳数为0，通过一个路由设备可达的网络的跳数为1。也就是说，度量值等于从本网络到达目的网络间的路由设备数量。
+为限制收敛时间，RIP规定度量值取0～15之间的整数，大于或等于 16 的跳数被定义为目的网络或主机不可达（Network Unreachable）。由于这个限制，使得RIP不可能在大型网络中得到应用。
+RIP 路由器默认每 30 秒使用UDP520端口发送一次路由表，如果在 180 秒之内没有收到路由的更新，则将该路由置为无效，在 120 秒内还没收到这条路由的更新，就从路由表中将该路由删除。
+2. OSPF 全称开放式最短路径优先，Open Shortest Path First
+其通过在自治系统（AS，autonomous system）中划分区域（骨干、普通、末梢STUB）和选举主备路由器DR和BDR，利用Dijkstra最短路径算法生成最短路径树，建立并维护链路状态数据库（LSDB,Link State Database）。
+OSPF用IP报文直接封装协议报文，协议号为89。OSPF分为5种报文：Hello报文、DD报文、LSR报文、LSU报文和LSAck报文，翻译下来分别是哈喽报文、数据库描述报文、链路状态请求报文、链路状态更新报文、链路状态确认报文。
+注意区分LSA（链路状态通告）和LSAck，LSA是链路状态信息，被封装在DD、LSU报文中传递；LSR用来请求LSA，LSAck用来确认LSA。
+3. IS-IS 全称中间系统到中间系统，Intermediate system to intermediate system
+其特性与OSPF有一定关系：是一种链路状态协议，使用最短路径优先SPF算法进行路由计算，选举DIS和非DIS（与OSPF中的DR和BDR类似）。
+分为三种路由器：L1路由器、L2路由器和L1/L2路由器。其中，L1路由器是为端系统直接提供服务的路由器，L2路由器是骨干路由器。L1/L2 路由器负责把 L1 区域的路由泄露/汇总进 L2 骨干，同时向 L1 区域自动下发一条默认路由，形似桥梁。
+分为三种报文：HELLO PDU（Protocol Data Unit）、LSP（Link State PDUs）和SNP（Sequence Number PDUs）翻译为Hello报文、链路状态报文、序列号报文。
+适用于大型运营商。
+4. BGP 全称边界网关协议，Border Gateway Protocol
+其使用TCP179端口作为其传输层协议，通过自治系统（AS）的内外关系分为内部（Internal）BGP和外部（External）BGP，也就是常说的IBGP、EBGP。
+5. 分类与关系 分类如下图所示：
+特性 OSPF RIP BGP 协议类型 链路状态协议 距离矢量协议 路径矢量协议 承载协议 IP UDP(520) TCP(179) 路由算法 Dijkstra算法 距离矢量算法 路径向量算法 路由更新机制 链路状态变化时触发更新 周期性更新(30秒)，变化时触发更新 增量更新，仅在路由变化时发送 路由表维护 维护完整LSDB 维护完整路由表 仅维护最优路由表 防环机制 SPF算法 水平分割、毒性逆转 AS路径检查 度量标准 成本(Cost，基于带宽) 跳数(Hop Count) AS路径长度、本地优先级等 网络规模 中大型网络(数百台路由器) 小型网络(≤15跳) 超大型网络(互联网级) 收敛速度 快 慢 较慢 路由更新开销 中等(仅更新变化部分) 高(发送完整路由表) 低(增量更新) ENSP中的配置 RIP 的配置 拓扑图如图：">
+	<meta itemprop="datePublished" content="2026-08-29T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-08-29T00:00:00+00:00">
+	<meta itemprop="wordCount" content="656">
+	<meta itemprop="keywords" content="ENSP,路由协议">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程">
+	<meta name="twitter:description" content="常见路由协议简介与要点 1. RIP 全称路由信息协议，Routing Information Protocol
+其使用跳数（Hop Count）来衡量到达目的地址的距离，称为度量值。在缺省情况下，路由设备到与它直接相连网络的跳数为0，通过一个路由设备可达的网络的跳数为1。也就是说，度量值等于从本网络到达目的网络间的路由设备数量。
+为限制收敛时间，RIP规定度量值取0～15之间的整数，大于或等于 16 的跳数被定义为目的网络或主机不可达（Network Unreachable）。由于这个限制，使得RIP不可能在大型网络中得到应用。
+RIP 路由器默认每 30 秒使用UDP520端口发送一次路由表，如果在 180 秒之内没有收到路由的更新，则将该路由置为无效，在 120 秒内还没收到这条路由的更新，就从路由表中将该路由删除。
+2. OSPF 全称开放式最短路径优先，Open Shortest Path First
+其通过在自治系统（AS，autonomous system）中划分区域（骨干、普通、末梢STUB）和选举主备路由器DR和BDR，利用Dijkstra最短路径算法生成最短路径树，建立并维护链路状态数据库（LSDB,Link State Database）。
+OSPF用IP报文直接封装协议报文，协议号为89。OSPF分为5种报文：Hello报文、DD报文、LSR报文、LSU报文和LSAck报文，翻译下来分别是哈喽报文、数据库描述报文、链路状态请求报文、链路状态更新报文、链路状态确认报文。
+注意区分LSA（链路状态通告）和LSAck，LSA是链路状态信息，被封装在DD、LSU报文中传递；LSR用来请求LSA，LSAck用来确认LSA。
+3. IS-IS 全称中间系统到中间系统，Intermediate system to intermediate system
+其特性与OSPF有一定关系：是一种链路状态协议，使用最短路径优先SPF算法进行路由计算，选举DIS和非DIS（与OSPF中的DR和BDR类似）。
+分为三种路由器：L1路由器、L2路由器和L1/L2路由器。其中，L1路由器是为端系统直接提供服务的路由器，L2路由器是骨干路由器。L1/L2 路由器负责把 L1 区域的路由泄露/汇总进 L2 骨干，同时向 L1 区域自动下发一条默认路由，形似桥梁。
+分为三种报文：HELLO PDU（Protocol Data Unit）、LSP（Link State PDUs）和SNP（Sequence Number PDUs）翻译为Hello报文、链路状态报文、序列号报文。
+适用于大型运营商。
+4. BGP 全称边界网关协议，Border Gateway Protocol
+其使用TCP179端口作为其传输层协议，通过自治系统（AS）的内外关系分为内部（Internal）BGP和外部（External）BGP，也就是常说的IBGP、EBGP。
+5. 分类与关系 分类如下图所示：
+特性 OSPF RIP BGP 协议类型 链路状态协议 距离矢量协议 路径矢量协议 承载协议 IP UDP(520) TCP(179) 路由算法 Dijkstra算法 距离矢量算法 路径向量算法 路由更新机制 链路状态变化时触发更新 周期性更新(30秒)，变化时触发更新 增量更新，仅在路由变化时发送 路由表维护 维护完整LSDB 维护完整路由表 仅维护最优路由表 防环机制 SPF算法 水平分割、毒性逆转 AS路径检查 度量标准 成本(Cost，基于带宽) 跳数(Hop Count) AS路径长度、本地优先级等 网络规模 中大型网络(数百台路由器) 小型网络(≤15跳) 超大型网络(互联网级) 收敛速度 快 慢 较慢 路由更新开销 中等(仅更新变化部分) 高(发送完整路由表) 低(增量更新) ENSP中的配置 RIP 的配置 拓扑图如图：">
+
+      
+      
+    
+	
+  </head><body class="ma0 avenir bg-near-white production is-page is-page page-260825_浅谈四个路由协议以及其配置教程">
+   
+  
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <header class="cover bg-center" style="background-image: url('https://codezm-cn.github.io/images/260826/3.png');">
+    <div class="bg-black-60">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l center items-center justify-between">
+    <a href="/" class="f3 fw2 hover-white white-90 dib no-underline">
+      
+        codezm-cn的网络工程笔记
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/linux/" title="Linux服务器 page">
+              Linux服务器
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/kali/" title="网络安全 page">
+              网络安全
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/huawei/" title="华为ensp page">
+              华为ensp
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/h3c/" title="华三 page">
+              华三
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/other/" title="杂项 page">
+              杂项
+            </a>
+          </li>
+          
+        </ul>
+      
+      <div class="ananke-socials"></div>
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv6 ph3 ph4-ns">
+        
+          <div class="f2 f1-l fw2 white-90 mb0 lh-title">浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程</div>
+          
+        
+      </div>
+    </div>
+  </header>
+
+
+<main class="pb7" role="main">
+  
+
+  <article class="page-260825_浅谈四个路由协议以及其配置教程 flex-l mw7 center ph3 flex-wrap justify-between">
+    <header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked ttu">
+    <a class="link dim" href="https://codezm-cn.github.io/posts/"></a>
+  </aside><div id="sharing" class="mt3 ananke-socials"></div>
+<h1 class="f1 athelas mt3 mb1">浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程</h1>
+      
+      
+      
+      <time class="f6 mv4 dib tracked" datetime="2026-08-29T00:00:00Z">August 29, 2026</time>
+      
+
+      
+      
+    </header>
+    <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-100-l"><h3 id="常见路由协议简介与要点">常见路由协议简介与要点</h3>
+<h4 id="1-rip">1. RIP</h4>
+<p>全称<strong>路由信息协议，Routing Information Protocol</strong></p>
+<p>其使用跳数（Hop Count）来衡量到达目的地址的距离，称为度量值。在缺省情况下，路由设备到与它直接相连网络的跳数为0，通过一个路由设备可达的网络的跳数为1。也就是说，度量值等于从本网络到达目的网络间的路由设备数量。</p>
+<p>为限制收敛时间，RIP规定度量值取0～15之间的整数，大于或等于 <strong>16</strong> 的跳数被定义为目的网络或主机不可达（Network Unreachable）。由于这个限制，使得RIP不可能在大型网络中得到应用。</p>
+<p>RIP 路由器默认每 <strong>30</strong> 秒使用UDP520端口发送一次路由表，如果在 <strong>180</strong> 秒之内没有收到路由的更新，则将该路由置为无效，在 <strong>120</strong> 秒内还没收到这条路由的更新，就从路由表中将该路由删除。</p>
+<h4 id="2-ospf">2. OSPF</h4>
+<p>全称<strong>开放式最短路径优先，Open Shortest Path First</strong></p>
+<p>其通过在自治系统（AS，autonomous system）中<strong>划分区域</strong>（骨干、普通、末梢STUB）和选举主备路由器DR和BDR，利用<strong>Dijkstra最短路径算法</strong>生成最短路径树，建立并维护<strong>链路状态数据库（LSDB,Link State Database）</strong>。</p>
+<p>OSPF用IP报文直接封装协议报文，协议号为89。OSPF分为5种报文：<strong>Hello报文、DD报文、LSR报文、LSU报文和LSAck报文</strong>，翻译下来分别是哈喽报文、数据库描述报文、链路状态请求报文、链路状态更新报文、链路状态确认报文。</p>
+<p><em><strong>注意区分LSA（链路状态通告）和LSAck，LSA是链路状态信息，被封装在DD、LSU报文中传递；LSR用来请求LSA，LSAck用来确认LSA。</strong></em></p>
+<h3 id="3-is-is">3. IS-IS</h3>
+<p>全称<strong>中间系统到中间系统，Intermediate system to intermediate system</strong></p>
+<p>其特性与OSPF有一定关系：是一种链路状态协议，使用最短路径优先SPF算法进行路由计算，选举DIS和非DIS（与OSPF中的DR和BDR类似）。</p>
+<p>分为三种路由器：L1路由器、L2路由器和L1/L2路由器。其中，L1路由器是为端系统直接提供服务的路由器，L2路由器是骨干路由器。L1/L2 路由器负责把 <strong>L1 区域的路由泄露/汇总进 L2 骨干</strong>，同时向 L1 区域<strong>自动下发一条默认路由</strong>，形似桥梁。</p>
+<p>分为三种报文：HELLO PDU（Protocol Data Unit）、LSP（Link State PDUs）和SNP（Sequence Number PDUs）翻译为Hello报文、链路状态报文、序列号报文。</p>
+<p>适用于大型运营商。</p>
+<h4 id="4-bgp">4. BGP</h4>
+<p>全称<strong>边界网关协议，Border Gateway Protocol</strong></p>
+<p>其使用<strong>TCP179</strong>端口作为其传输层协议，通过自治系统（AS）的内外关系分为内部（Internal）BGP和外部（External）BGP，也就是常说的<strong>IBGP、EBGP</strong>。</p>
+<h4 id="5-分类与关系">5. 分类与关系</h4>
+<p>分类如下图所示：</p>
+<p><img src="/images/260826/1.png" alt=""></p>
+<table>
+	<thead>
+			<tr>
+					<th style="text-align: center">特性</th>
+					<th style="text-align: center">OSPF</th>
+					<th style="text-align: center">RIP</th>
+					<th style="text-align: center">BGP</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td style="text-align: center">协议类型</td>
+					<td style="text-align: center">链路状态协议</td>
+					<td style="text-align: center">距离矢量协议</td>
+					<td style="text-align: center">路径矢量协议</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">承载协议</td>
+					<td style="text-align: center">IP</td>
+					<td style="text-align: center">UDP(520)</td>
+					<td style="text-align: center">TCP(179)</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由算法</td>
+					<td style="text-align: center">Dijkstra算法</td>
+					<td style="text-align: center">距离矢量算法</td>
+					<td style="text-align: center">路径向量算法</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由更新机制</td>
+					<td style="text-align: center">链路状态变化时触发更新</td>
+					<td style="text-align: center">周期性更新(30秒)，变化时触发更新</td>
+					<td style="text-align: center">增量更新，仅在路由变化时发送</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由表维护</td>
+					<td style="text-align: center">维护完整LSDB</td>
+					<td style="text-align: center">维护完整路由表</td>
+					<td style="text-align: center">仅维护最优路由表</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">防环机制</td>
+					<td style="text-align: center">SPF算法</td>
+					<td style="text-align: center">水平分割、毒性逆转</td>
+					<td style="text-align: center">AS路径检查</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">度量标准</td>
+					<td style="text-align: center">成本(Cost，基于带宽)</td>
+					<td style="text-align: center">跳数(Hop Count)</td>
+					<td style="text-align: center">AS路径长度、本地优先级等</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">网络规模</td>
+					<td style="text-align: center">中大型网络(数百台路由器)</td>
+					<td style="text-align: center">小型网络(≤15跳)</td>
+					<td style="text-align: center">超大型网络(互联网级)</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">收敛速度</td>
+					<td style="text-align: center">快</td>
+					<td style="text-align: center">慢</td>
+					<td style="text-align: center">较慢</td>
+			</tr>
+			<tr>
+					<td style="text-align: center">路由更新开销</td>
+					<td style="text-align: center">中等(仅更新变化部分)</td>
+					<td style="text-align: center">高(发送完整路由表)</td>
+					<td style="text-align: center">低(增量更新)</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h3 id="ensp中的配置">ENSP中的配置</h3>
+<h4 id="rip-的配置">RIP 的配置</h4>
+<p>拓扑图如图：</p>
+<p><img src="/images/260826/2.png" alt=""></p>
+<p>命令：</p>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#IP配置</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>interface G 0/0/0    <span style="color:#75715e">#进入接口，后面简写表示</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip address 192.168.1.1 <span style="color:#ae81ff">24</span>    <span style="color:#75715e">#IP地址配置，后面简写</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>ip address 1.1.1.1 <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>ip a 1.1.1.2 <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip a 2.2.2.2 <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>ip a 172.16.1.1 <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip a 2.2.2.1 <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#主要：RIP配置</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>rip <span style="color:#ae81ff">65535</span>    <span style="color:#75715e">#配置rip，数字自定（限制1-65535），建议保持一致</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-65535<span style="color:#f92672">]</span>version <span style="color:#ae81ff">2</span>    <span style="color:#75715e">#启用RIPv2，v1协议存在安全风险</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-65535<span style="color:#f92672">]</span>network 192.168.1.0    <span style="color:#75715e">#宣告网段，将该设备所连接的网段进行宣告（无主机号）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-65535<span style="color:#f92672">]</span>network 1.1.1.0
+</span></span><span style="display:flex;"><span>Error: The network address is invalid, and the specified address must be major-n
+</span></span><span style="display:flex;"><span>et address without any subnets.
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#解释：宣告网络是主类网络号，不能是子网地址，需要根据子网类型进行设置</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#如A类10.0.0.0，B类172.16.0.0，C类192.168.1.0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-65535<span style="color:#f92672">]</span>network 1.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-65535<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>rip <span style="color:#ae81ff">65535</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-rip-65535<span style="color:#f92672">]</span>network 1.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-rip-65535<span style="color:#f92672">]</span>network 2.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-rip-65535<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>rip <span style="color:#ae81ff">65535</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-rip-65535<span style="color:#f92672">]</span>network 2.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-rip-65535<span style="color:#f92672">]</span>network 172.16.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-rip-65535<span style="color:#f92672">]</span>quit</span></span></code></pre></div>
+  </div><p>此时使用PCping可以互通，或在路由器使用 <code>display ip routing-table</code> 可以查看路由表</p>
+<p>在后面加protocol 协议类型可以筛选对应的路由表如 <code>display ip routing-table protocol rip</code></p>
+<h4 id="ospf的配置">OSPF的配置</h4>
+<p>拓扑图如图所示：</p>
+<p><img src="/images/260826/3.png" alt=""></p>
+<blockquote>
+<p>其中AR 2中的GE 1/0/0口是外加接口卡，由于AR1220设备只有2个GE口，且E口<strong>默认工作在二层模式（本质是交换口），不能直接配置IP地址</strong>，也不能使用undo portswitch命令，所以可以右键该设备，点击设置进入视图界面添加接口卡</p>
+</blockquote>
+<p><img src="/images/260826/4.png" alt=""></p>
+<p>IP配置忽略，下面是ospf的主要配置：</p>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>    <span style="color:#75715e">#数字自定义，最高65535，建议和其他路由保持一致</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">0</span>    <span style="color:#75715e">#根据划分输入数字，骨干区域必须为0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>network 1.0.0.0 0.255.255.255    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#宣告这个区域所直连的网段，并且需要补充反掩码，反掩码的输入见下方引用</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>area <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>network 10.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>quit    <span style="color:#75715e">#需要quit2次</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>network 1.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>network 2.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>network 3.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>network 2.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>area <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 20.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>network 10.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>network 192.168.1.0 0.0.0.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 20.0.0.0 0.255.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 172.16.0.0 0.0.255.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>quit</span></span></code></pre></div>
+  </div><blockquote>
+<p>反掩码顾名思义将掩码转换为二进制后取反（0变1，1变0）</p>
+<p>例子/30(255.255.255.252)</p>
+<p>转换为2进制-&gt;1111 1111.1111 1111.1111 1111.1111 1100,</p>
+<p>其反掩码为0000 0000.0000 0000.0000 0000.0000 0011</p>
+<p>转换为十进制-&gt;0.0.0.3</p>
+</blockquote>
+<p>此时设备可以互相ping通，使用命令 <code>display ip routing-table</code> 查看路由表，<code>display ospf peer</code>查看OSPF邻居关系，<code>display ospf lsdb</code>查看链路状态数据库</p>
+<h4 id="is-is的配置">IS-IS的配置</h4>
+<p>拓扑图如图：</p>
+<p><img src="/images/260826/5.png" alt=""></p>
+<p>IP配置已忽略，下面是IS-IS的主要配置：</p>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>isis <span style="color:#ae81ff">1</span>    <span style="color:#75715e">#进入isis模式，数字自定义，建议和其他路由保持一致</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-isis-1<span style="color:#f92672">]</span>network-entity 49.0001.0000.0000.0001.00    <span style="color:#75715e">#设置NET，格式见引用</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-isis-1<span style="color:#f92672">]</span>is-level level-1-2    <span style="color:#75715e">#设置等级，默认为level-1-2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-isis-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/0<span style="color:#f92672">]</span>isis enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#与前两者不同，isis通过接口启用完成形似宣告网段的功能</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#接口的Level级别默认为level-1-2，故不设置</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>isis enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>isis circuit-level level-2    <span style="color:#75715e">#设置接口等级，可选功能</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>isis <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-isis-1<span style="color:#f92672">]</span>network-entity 49.0000.0000.0000.0002.00
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-isis-1<span style="color:#f92672">]</span>is-level level-2
+</span></span><span style="display:flex;"><span>Info: IS Level Changed, Resetting ISIS...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-isis-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>isis enable
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>isis cir level-2    <span style="color:#75715e">#设置接口等级简写</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>isis enable
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>isis cir level-2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>isis <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-isis-1<span style="color:#f92672">]</span>net 49.0001.0000.0000.0003.00    <span style="color:#75715e">#net设置简写</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-isis-1<span style="color:#f92672">]</span>is-l level-1-2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-isis-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>is en <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>isis cir level-2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>is en <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5<span style="color:#f92672">]</span>isis <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-isis-1<span style="color:#f92672">]</span>net 49.0001.0000.0000.0005.00
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-isis-1<span style="color:#f92672">]</span>is-l level-1
+</span></span><span style="display:flex;"><span>Info: IS Level Changed, Resetting ISIS...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-isis-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-GigabitEthernet0/0/0<span style="color:#f92672">]</span>is en <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-GigabitEthernet0/0/1<span style="color:#f92672">]</span>is en <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-GigabitEthernet0/0/1<span style="color:#f92672">]</span>is cir level-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-GigabitEthernet0/0/1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6<span style="color:#f92672">]</span>isis <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-isis-1<span style="color:#f92672">]</span>net 49.0001.0000.0000.0006.00
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-isis-1<span style="color:#f92672">]</span>is-l level-1
+</span></span><span style="display:flex;"><span>Info: IS Level Changed, Resetting ISIS...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-isis-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-GigabitEthernet0/0/1<span style="color:#f92672">]</span>is en <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-GigabitEthernet0/0/1<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-GigabitEthernet0/0/0<span style="color:#f92672">]</span>is en <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-GigabitEthernet0/0/0<span style="color:#f92672">]</span>is cir level-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR6-GigabitEthernet0/0/0<span style="color:#f92672">]</span>quit</span></span></code></pre></div>
+  </div><blockquote>
+<p>网络实体名NET（Network Entity Title）的格式为：AFI.Area ID.System ID.SEL</p>
+<p>AFI（地址族标识 Address Family Identifier）:私有网络为49（推荐），或演示为10</p>
+<p>Area ID:根据规划定义，如0001，0002</p>
+<p><strong>需要L2 邻居的Area ID 可以不同；L1 邻居的Area ID 必须相同</strong>（也就是说图中AR1与AR5必须一致，AR3与AR6必须一致）<del>因为刚开始乱配发现ping不通才发现的问题</del></p>
+<p>System ID:自定义但唯一，可以用Router-Id转换（1.1.1.1-&gt;0010.0100.1001），或直接按序号（0000.0000.0001）甚至可以用Loopback环回地址转换（172.16.1.1-&gt;1720.1600.1001）</p>
+<p>SEL：默认为00</p>
+</blockquote>
+<h4 id="bgp的配置">BGP的配置</h4>
+<p>拓扑图如图：</p>
+<p><img src="/images/260826/6.png" alt=""></p>
+<p>BGP的配置如下，其中IP配置、AS 100的RIP宣告、AS 200静态路由配置已忽略：</p>
+<p>为便于查看AS 100的IP与rip配置已写入文档，<a href="/text/AS100.txt">点击查看</a></p>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#AS 100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">100</span>    <span style="color:#75715e">#进入BGP</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-bgp<span style="color:#f92672">]</span>peer 100.1.1.1 as-number <span style="color:#ae81ff">100</span>    <span style="color:#75715e">#将邻接的IP归入AS内</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-bgp<span style="color:#f92672">]</span>peer 101.1.1.2 as-number <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-bgp<span style="color:#f92672">]</span>import-route rip <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#方案A：将RIP宣告的路由引入BGP，带标号</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-bgp<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>rip <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-1<span style="color:#f92672">]</span>import-route bgp    <span style="color:#75715e">#互相引用，不带标号</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-rip-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-bgp<span style="color:#f92672">]</span>peer 101.1.1.1 as-num <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-bgp<span style="color:#f92672">]</span>peer 100.1.2.1 as-num <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-bgp<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>rip <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-rip-1<span style="color:#f92672">]</span>import bgp
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-rip-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-bgp<span style="color:#f92672">]</span>import rip <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-bgp<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-bgp<span style="color:#f92672">]</span>peer 100.1.1.2 as-n <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-bgp<span style="color:#f92672">]</span>peer 100.1.2.2 as-n <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-bgp<span style="color:#f92672">]</span>peer 1.1.1.2 as-n <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-bgp<span style="color:#f92672">]</span>imp rip <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-bgp<span style="color:#f92672">]</span>rip <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-rip-1<span style="color:#f92672">]</span>imp bgp
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-rip-1<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#AS 200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR4<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR4-bgp<span style="color:#f92672">]</span>peer 1.1.1.1 as-n <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR4-bgp<span style="color:#f92672">]</span>peer 10.1.1.2 as-n <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR4-bgp<span style="color:#f92672">]</span>network 10.1.1.0 255.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#方案B：直接宣告（精确匹配），IP和掩码（注意区分OSPF的反掩码）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR4-bgp<span style="color:#f92672">]</span>network 1.0.0.0 255.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR4-bgp<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5<span style="color:#f92672">]</span>bgp <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-bgp<span style="color:#f92672">]</span>peer 10.1.1.1 as-n <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-bgp<span style="color:#f92672">]</span>network 172.16.0.0 255.255.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-bgp<span style="color:#f92672">]</span>network 10.1.1.0 255.0.0.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR5-bgp<span style="color:#f92672">]</span>quit</span></span></code></pre></div>
+  </div><p>BGP高级用法较多，这里只做简单演示</p>
+<p>使用 <code>display ip routing-table</code> 查看路由表会发现只有EBGP和其他路由协议，因为BGP的优先级极低（默认255），因此会被其他协议覆盖</p>
+<p>可以通过以下命令查看BGP相关属性：</p>
+<ul>
+<li><code>display bgp peer</code>:查看邻居</li>
+<li> <code>display bgp routing-table</code>:查看路由</li>
+</ul>
+<h3 id="引用资料">引用资料</h3>
+<p><a href="https://baike.baidu.com/item/%E8%B7%AF%E7%94%B1%E4%BF%A1%E6%81%AF%E5%8D%8F%E8%AE%AE/2707187?fromtitle=RIP&amp;fromid=571852">路由信息协议_百度百科</a></p>
+<p><a href="https://baike.baidu.com/item/%E7%BB%84%E6%92%AD%E6%89%A9%E5%B1%95OSPF?fromtitle=ospf&amp;fromid=1166620&amp;fromModule=lemma_search-box">组播扩展OSPF_百度百科</a></p>
+<p><a href="https://baike.baidu.com/item/%E4%B8%AD%E9%97%B4%E7%B3%BB%E7%BB%9F%E5%88%B0%E4%B8%AD%E9%97%B4%E7%B3%BB%E7%BB%9F%E5%8D%8F%E8%AE%AE?fromModule=lemma_search-box">中间系统到中间系统协议_百度百科</a></p>
+<p><a href="https://baike.baidu.com/item/%E8%BE%B9%E7%95%8C%E7%BD%91%E5%85%B3%E5%8D%8F%E8%AE%AE?fromtitle=bgp&amp;fromid=91408&amp;fromModule=lemma_search-box">边界网关协议_百度百科</a></p>
+<p><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100463817/1f2fe4d6">RIP原理描述_华为</a></p>
+<p><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100463817/43e4c3ed">OSPF原理描述_华为</a></p>
+<p><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100463817/16d9bccc">IS-IS原理描述_华为</a></p>
+<p><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100463817/4141222c#ZH-CN_CONCEPT_0000001176663659">BGP原理描述_华为</a></p>
+<p><a href="https://ruijie.com.cn/jszl/83944/?idPath=2295%7C2316%7C433109104262652160&amp;type=1">大型数据中心网络路由协议选择 - 锐捷网络</a></p>
+<p><a href="https://blog.csdn.net/qq_45443704/article/details/128761557">ISIS简介、NSAP与NET地址、Router-Id转换成NET地址-CSDN博客</a></p>
+<p><a href="https://blog.csdn.net/Lxyand1/article/details/144424707">BGP 全网最详解（理论及配置）_bgp详解-CSDN博客</a></p>
+<p>感兴趣也可以查阅一下RFC文档深入研究：</p>
+<p><a href="https://datatracker.ietf.org/doc/html/rfc2453">RFC 2453 - RIP Version 2</a></p>
+<p><a href="https://datatracker.ietf.org/doc/html/rfc2328">RFC 2328 - OSPF Version 2</a></p>
+<p><a href="https://datatracker.ietf.org/doc/html/rfc4271">RFC 4271 - A Border Gateway Protocol 4 (BGP-4)</a></p>
+<h3 id="结语">结语</h3>
+<p>第一次写长文案，如有错误，欢迎到issue指正，感谢！</p>
+<p>本次配置都是偏基础的，并适当结合中级网络工程师考点进行整理，复杂配置和资料可查阅其他文档</p>
+<p>大部分命令采用简写形式，完整形式向上翻可以看到，第一次敲的是完整代码</p>
+<p>若按照命令敲发现ping不通，可以先排查是否有敲错、漏敲，可以查看路由表或者将所敲的内容发给AI并附上拓扑图和发现的情况，也有一定可能是ensp的bug，建议重启设备重敲</p>
+<ul class="pa0">
+  
+   <li class="list di">
+     <a href="/categories/huawei/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">Huawei</a>
+   </li>
+  
+</ul><ul class="pa0">
+  
+   <li class="list di">
+     <a href="/tags/ensp/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">ENSP</a>
+   </li>
+  
+   <li class="list di">
+     <a href="/tags/%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">路由协议</a>
+   </li>
+  
+</ul>
+
+      
+    </div></article>
+</main><footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="https://codezm-cn.github.io/" >
+    &copy;  codezm-cn的网络工程笔记 2026 
+  </a>
+    <div><div class="ananke-socials"></div>
+</div>
+  </div>
+</footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
