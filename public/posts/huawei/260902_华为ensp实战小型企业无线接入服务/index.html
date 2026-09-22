@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>华为Ensp实战：小型企业无线接入服务 | codezm-cn的网络工程笔记</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="
+    📖 目录
+    
+  
+    任务要求
+    分析与预配置
+      
+        OSPF区域与DHCP规划
+        WLAN 规划
+        配置组成
+        Ip分配
+        VLAN分配
+      
+    
+    详细配置
+    功能测试
+    总结（含拓扑下载链接）
+  
+
+  
+
+任务要求
+本次实验模拟三个工作区和一个管理机房，要求完成以下目标：
+
+
+三个工作区之间需要互联互通，工作区之间通过核心路由器 AR1、AR2、AR3 组成骨干网络进行连接。
+
+
+DHCP 服务器和 AC 无线控制器部署在机房，由机房核心交换机 LSW4 统一接入和管理。
+
+
+每个工作区内部通过 VLAN 划分业务网络、管理网络和互联网络，实现二层隔离、三层互通。
+
+
+使用 OSPF 多区域协议实现路由器、三层交换机之间的动态路由学习，保证不同工作区、不同 VLAN 之间可以互相访问。
+
+
+普通 PC 和无线 STA 的 IP 地址由机房 DHCP 服务器统一分配，跨网段通过 DHCP 中继实现。
+
+
+无线网络采用 AC &#43; Fit AP 架构，AP 管理地址由 AC 分配，无线业务 VLAN 分别为 VLAN11、VLAN12、VL&#43;AN13，采用直接转发模式。
+
+
+最终实现：PC/STA 可自动获取地址，无线客户端可连接 SSID，三个工作区之间可跨区域互访。
+
+
+分析与预配置
+拓扑图如图所示
+
+拓扑整体分为四个区域：
+
+
+Area 0：骨干区域
+由 AR1、AR2、AR3 三台核心路由器组成，保证 Area 0 连续。">
+    <meta name="generator" content="Hugo 0.164.0">
+    
+    
+    
+      <meta name="robots" content="noindex, nofollow">
+    
+    
+
+    <link rel="stylesheet" href="/ananke/css/main.css">
+    <script>
+  (function () {
+    "use strict";
+
+    
+    
+    function revealButtons() {
+      var buttons = document.querySelectorAll(".code-block .code-copy[hidden]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].hidden = false;
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", revealButtons);
+    } else {
+      revealButtons();
+    }
+
+    function flash(button) {
+      var label = button.querySelector(".code-copy-label");
+      var previous = label ? label.textContent : null;
+      button.classList.add("is-copied");
+      if (label) label.textContent = "Copied";
+      window.setTimeout(function () {
+        button.classList.remove("is-copied");
+        if (label && previous !== null) label.textContent = previous;
+      }, 2000);
+    }
+
+    function legacyCopy(text) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(area);
+      return ok;
+    }
+
+    function copyFrom(button) {
+      var container = button.closest(".code-block");
+      if (!container) return;
+      var pre = container.querySelector("pre");
+      if (!pre) return;
+      var source = pre.querySelector("code") || pre;
+      var text = source.innerText;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { flash(button); },
+          function () { if (legacyCopy(text)) flash(button); }
+        );
+      } else if (legacyCopy(text)) {
+        flash(button);
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      var button = event.target.closest(".code-copy");
+      if (button) copyFrom(button);
+    });
+  })();
+</script>
+
+    
+      
+
+    
+
+    
+
+    
+      <link rel="canonical" href="http://localhost:1313/posts/huawei/260902_%E5%8D%8E%E4%B8%BAensp%E5%AE%9E%E6%88%98%E5%B0%8F%E5%9E%8B%E4%BC%81%E4%B8%9A%E6%97%A0%E7%BA%BF%E6%8E%A5%E5%85%A5%E6%9C%8D%E5%8A%A1/">
+    
+
+    
+    
+    <meta property="og:url" content="http://localhost:1313/posts/huawei/260902_%E5%8D%8E%E4%B8%BAensp%E5%AE%9E%E6%88%98%E5%B0%8F%E5%9E%8B%E4%BC%81%E4%B8%9A%E6%97%A0%E7%BA%BF%E6%8E%A5%E5%85%A5%E6%9C%8D%E5%8A%A1/">
+	<meta property="og:site_name" content="codezm-cn的网络工程笔记">
+	<meta property="og:title" content="华为Ensp实战：小型企业无线接入服务">
+	<meta property="og:description" content="📖 目录任务要求 分析与预配置 OSPF区域与DHCP规划 WLAN 规划 配置组成 Ip分配 VLAN分配 详细配置 功能测试 总结（含拓扑下载链接） 任务要求 本次实验模拟三个工作区和一个管理机房，要求完成以下目标：
+三个工作区之间需要互联互通，工作区之间通过核心路由器 AR1、AR2、AR3 组成骨干网络进行连接。
+DHCP 服务器和 AC 无线控制器部署在机房，由机房核心交换机 LSW4 统一接入和管理。
+每个工作区内部通过 VLAN 划分业务网络、管理网络和互联网络，实现二层隔离、三层互通。
+使用 OSPF 多区域协议实现路由器、三层交换机之间的动态路由学习，保证不同工作区、不同 VLAN 之间可以互相访问。
+普通 PC 和无线 STA 的 IP 地址由机房 DHCP 服务器统一分配，跨网段通过 DHCP 中继实现。
+无线网络采用 AC &#43; Fit AP 架构，AP 管理地址由 AC 分配，无线业务 VLAN 分别为 VLAN11、VLAN12、VL&#43;AN13，采用直接转发模式。
+最终实现：PC/STA 可自动获取地址，无线客户端可连接 SSID，三个工作区之间可跨区域互访。
+分析与预配置 拓扑图如图所示
+拓扑整体分为四个区域：
+Area 0：骨干区域
+由 AR1、AR2、AR3 三台核心路由器组成，保证 Area 0 连续。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-09-02T00:00:00+00:00">
+		<meta property="article:modified_time" content="2026-09-02T00:00:00+00:00">
+		<meta property="article:tag" content="ENSP">
+		<meta property="article:tag" content="华为">
+
+	<meta itemprop="name" content="华为Ensp实战：小型企业无线接入服务">
+	<meta itemprop="description" content="📖 目录任务要求 分析与预配置 OSPF区域与DHCP规划 WLAN 规划 配置组成 Ip分配 VLAN分配 详细配置 功能测试 总结（含拓扑下载链接） 任务要求 本次实验模拟三个工作区和一个管理机房，要求完成以下目标：
+三个工作区之间需要互联互通，工作区之间通过核心路由器 AR1、AR2、AR3 组成骨干网络进行连接。
+DHCP 服务器和 AC 无线控制器部署在机房，由机房核心交换机 LSW4 统一接入和管理。
+每个工作区内部通过 VLAN 划分业务网络、管理网络和互联网络，实现二层隔离、三层互通。
+使用 OSPF 多区域协议实现路由器、三层交换机之间的动态路由学习，保证不同工作区、不同 VLAN 之间可以互相访问。
+普通 PC 和无线 STA 的 IP 地址由机房 DHCP 服务器统一分配，跨网段通过 DHCP 中继实现。
+无线网络采用 AC &#43; Fit AP 架构，AP 管理地址由 AC 分配，无线业务 VLAN 分别为 VLAN11、VLAN12、VL&#43;AN13，采用直接转发模式。
+最终实现：PC/STA 可自动获取地址，无线客户端可连接 SSID，三个工作区之间可跨区域互访。
+分析与预配置 拓扑图如图所示
+拓扑整体分为四个区域：
+Area 0：骨干区域
+由 AR1、AR2、AR3 三台核心路由器组成，保证 Area 0 连续。">
+	<meta itemprop="datePublished" content="2026-09-02T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-09-02T00:00:00+00:00">
+	<meta itemprop="wordCount" content="1509">
+	<meta itemprop="keywords" content="ENSP,华为">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="华为Ensp实战：小型企业无线接入服务">
+	<meta name="twitter:description" content="📖 目录任务要求 分析与预配置 OSPF区域与DHCP规划 WLAN 规划 配置组成 Ip分配 VLAN分配 详细配置 功能测试 总结（含拓扑下载链接） 任务要求 本次实验模拟三个工作区和一个管理机房，要求完成以下目标：
+三个工作区之间需要互联互通，工作区之间通过核心路由器 AR1、AR2、AR3 组成骨干网络进行连接。
+DHCP 服务器和 AC 无线控制器部署在机房，由机房核心交换机 LSW4 统一接入和管理。
+每个工作区内部通过 VLAN 划分业务网络、管理网络和互联网络，实现二层隔离、三层互通。
+使用 OSPF 多区域协议实现路由器、三层交换机之间的动态路由学习，保证不同工作区、不同 VLAN 之间可以互相访问。
+普通 PC 和无线 STA 的 IP 地址由机房 DHCP 服务器统一分配，跨网段通过 DHCP 中继实现。
+无线网络采用 AC &#43; Fit AP 架构，AP 管理地址由 AC 分配，无线业务 VLAN 分别为 VLAN11、VLAN12、VL&#43;AN13，采用直接转发模式。
+最终实现：PC/STA 可自动获取地址，无线客户端可连接 SSID，三个工作区之间可跨区域互访。
+分析与预配置 拓扑图如图所示
+拓扑整体分为四个区域：
+Area 0：骨干区域
+由 AR1、AR2、AR3 三台核心路由器组成，保证 Area 0 连续。">
+
+	
+  </head><body class="ma0 avenir bg-near-white development is-page is-page page-260902_华为Ensp实战：小型企业无线接入服务">
+   
+  
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <header class="cover bg-center" style="background-image: url('http://localhost:1313/images/260915/1.png');">
+    <div class="bg-black-60">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l center items-center justify-between">
+    <a href="/" class="f3 fw2 hover-white white-90 dib no-underline">
+      
+        codezm-cn的网络工程笔记
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/linux/" title="Linux服务器 page">
+              Linux服务器
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/kali/" title="网络安全 page">
+              网络安全
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/huawei/" title="华为ensp page">
+              华为ensp
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/h3c/" title="华三 page">
+              华三
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white white-90 no-underline" href="/categories/other/" title="杂项 page">
+              杂项
+            </a>
+          </li>
+          
+        </ul>
+      
+      <div class="ananke-socials"></div>
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv6 ph3 ph4-ns">
+        
+          <div class="f2 f1-l fw2 white-90 mb0 lh-title">华为Ensp实战：小型企业无线接入服务</div>
+          
+        
+      </div>
+    </div>
+  </header>
+
+
+<main class="pb7" role="main">
+  
+
+  <article class="page-260902_华为Ensp实战：小型企业无线接入服务 flex-l mw8 center ph3 flex-wrap justify-between">
+    <header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked ttu">
+    <a class="link dim" href="http://localhost:1313/posts/"></a>
+  </aside><div id="sharing" class="mt3 ananke-socials"></div>
+<h1 class="f1 athelas mt3 mb1">华为Ensp实战：小型企业无线接入服务</h1>
+      
+      
+      
+      <time class="f6 mv4 dib tracked" datetime="2026-09-02T00:00:00Z">September 2, 2026</time>
+      
+
+      
+      
+    </header>
+    <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l">
+  <div class="toc-wrapper">
+    <h4>📖 目录</h4>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#任务要求">任务要求</a></li>
+    <li><a href="#分析与预配置">分析与预配置</a>
+      <ul>
+        <li><a href="#ospf区域与dhcp规划">OSPF区域与DHCP规划</a></li>
+        <li><a href="#wlan-规划">WLAN 规划</a></li>
+        <li><a href="#配置组成">配置组成</a></li>
+        <li><a href="#ip分配">Ip分配</a></li>
+        <li><a href="#vlan分配">VLAN分配</a></li>
+      </ul>
+    </li>
+    <li><a href="#详细配置">详细配置</a></li>
+    <li><a href="#功能测试">功能测试</a></li>
+    <li><a href="#总结含拓扑下载链接">总结（含拓扑下载链接）</a></li>
+  </ul>
+</nav>
+  </div>
+
+<h2 id="任务要求">任务要求</h2>
+<p>本次实验模拟三个工作区和一个管理机房，要求完成以下目标：</p>
+<ol>
+<li>
+<p>三个工作区之间需要互联互通，工作区之间通过核心路由器 AR1、AR2、AR3 组成骨干网络进行连接。</p>
+</li>
+<li>
+<p>DHCP 服务器和 AC 无线控制器部署在机房，由机房核心交换机 LSW4 统一接入和管理。</p>
+</li>
+<li>
+<p>每个工作区内部通过 VLAN 划分业务网络、管理网络和互联网络，实现二层隔离、三层互通。</p>
+</li>
+<li>
+<p>使用 OSPF 多区域协议实现路由器、三层交换机之间的动态路由学习，保证不同工作区、不同 VLAN 之间可以互相访问。</p>
+</li>
+<li>
+<p>普通 PC 和无线 STA 的 IP 地址由机房 DHCP 服务器统一分配，跨网段通过 DHCP 中继实现。</p>
+</li>
+<li>
+<p>无线网络采用 AC + Fit AP 架构，AP 管理地址由 AC 分配，无线业务 VLAN 分别为 VLAN11、VLAN12、VL+AN13，采用直接转发模式。</p>
+</li>
+<li>
+<p>最终实现：PC/STA 可自动获取地址，无线客户端可连接 SSID，三个工作区之间可跨区域互访。</p>
+</li>
+</ol>
+<h2 id="分析与预配置">分析与预配置</h2>
+<p>拓扑图如图所示</p>
+<p><img src="/images/260915/1.png" alt=""></p>
+<p>拓扑整体分为四个区域：</p>
+<ul>
+<li>
+<p><strong>Area 0：骨干区域</strong><br>
+由 AR1、AR2、AR3 三台核心路由器组成，保证 Area 0 连续。</p>
+</li>
+<li>
+<p><strong>Area 1：管理机房区域</strong> <br>
+LSW4 作为机房核心交换机，通过 VLAN100 与 AR1 互联，通过 VLAN200 连接 AC，通过 VLAN10 连接 DHCP 服务器。</p>
+</li>
+<li>
+<p><strong>Area 2：工作区 1 和工作区 2</strong><br>
+LSW1 作为工作区 1 的网关，LSW2 作为工作区 2 的网关，分别通过 VLAN100 与 AR2 互联。</p>
+</li>
+<li>
+<p><strong>Area 3：工作区 3</strong><br>
+LSW3 作为工作区 3 的网关，通过 VLAN100 与 AR3 互联。</p>
+</li>
+</ul>
+<h3 id="ospf区域与dhcp规划">OSPF区域与DHCP规划</h3>
+<table>
+	<thead>
+			<tr>
+					<th>OSPF 区域</th>
+					<th>说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Area 0</td>
+					<td>骨干区域，负责区域间路由转发</td>
+			</tr>
+			<tr>
+					<td>Area 1</td>
+					<td>管理机房区域</td>
+			</tr>
+			<tr>
+					<td>Area 2</td>
+					<td>工作区 1、工作区 2</td>
+			</tr>
+			<tr>
+					<td>Area 3</td>
+					<td>工作区 3</td>
+			</tr>
+	</tbody>
+</table>
+<p>业务地址池由机房 DHCP Server 统一分配：</p>
+<ul>
+<li>
+<p>VLAN11：192.168.11.0/24，网关 192.168.11.1</p>
+</li>
+<li>
+<p>VLAN12：192.168.12.0/24，网关 192.168.12.1</p>
+</li>
+<li>
+<p>VLAN13：192.168.13.0/24，网关 192.168.13.1</p>
+</li>
+</ul>
+<p>AP 管理地址由 AC6005 分配：</p>
+<ul>
+<li>
+<p>AP1 管理网段：20.1.1.8/30，网关 20.1.1.9</p>
+</li>
+<li>
+<p>AP2 管理网段：20.1.1.12/30，网关 20.1.1.13</p>
+</li>
+<li>
+<p>AP3 管理网段：20.1.1.16/30，网关 20.1.1.17</p>
+</li>
+</ul>
+<p>LSW1、LSW2、LSW3 的 Vlanif11/12/13 配置 DHCP 中继，指向 192.168.1.2</p>
+<p>LSW1、LSW2、LSW3 的 Vlanif200 配置 DHCP 中继，指向 AC 的 20.1.1.6</p>
+<h3 id="wlan-规划">WLAN 规划</h3>
+<p>AC 型号：AC6005</p>
+<p>AP 认证模式：实验环境使用 <code>ap auth-mode no-auth</code></p>
+<p>安全模板：WPA-WPA2 PSK，密码 12345678，AES 加密</p>
+<p><em>（以上配置仅作演示，实际配置需要注意设置强密码和认证模式）</em></p>
+<p>SSID：</p>
+<ul>
+<li>
+<p>WIFI-2.4G</p>
+</li>
+<li>
+<p>WIFI-5G</p>
+</li>
+</ul>
+<p>转发模式：<code>direct-forward</code> 直接转发。</p>
+<h3 id="配置组成">配置组成</h3>
+<table>
+	<thead>
+			<tr>
+					<th>设备</th>
+					<th>角色</th>
+					<th>关键说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>AR1、AR2、AR3</td>
+					<td>核心路由器</td>
+					<td>组成 Area 0 骨干，连接各工作区</td>
+			</tr>
+			<tr>
+					<td>LSW1、LSW2、LSW3</td>
+					<td>工作区核心交换机</td>
+					<td>三层网关，配置 DHCP 中继，运行 边缘OSPF</td>
+			</tr>
+			<tr>
+					<td>LSW4</td>
+					<td>机房核心交换机</td>
+					<td>连接 AR1、AC、DHCP Server</td>
+			</tr>
+			<tr>
+					<td>SW6、SW7、SW8</td>
+					<td>接入交换机</td>
+					<td>连接 PC 和 AP，二层透传 VLAN11/12/13 和 VLAN200</td>
+			</tr>
+			<tr>
+					<td>AC6005</td>
+					<td>无线控制器</td>
+					<td>管理 AP，分配 AP 管理地址，下发 WLAN 业务配置</td>
+			</tr>
+			<tr>
+					<td>AP1、AP2、AP3</td>
+					<td>无线接入点</td>
+					<td>Fit AP，由 AC 管理，直接转发无线业务</td>
+			</tr>
+			<tr>
+					<td>DHCP Server</td>
+					<td>DHCP 服务器</td>
+					<td>为 PC/STA 分配 VLAN11/12/13 业务地址</td>
+			</tr>
+			<tr>
+					<td>PC、STA</td>
+					<td>终端</td>
+					<td>通过 DHCP 获取地址，验证互通和无线接入</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="ip分配">Ip分配</h3>
+<table>
+	<thead>
+			<tr>
+					<th>设备</th>
+					<th>接口/VLAN</th>
+					<th>IP 地址</th>
+					<th>对端/说明</th>
+					<th>OSPF 区域</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>AR1</td>
+					<td>G0/0/0</td>
+					<td>10.0.0.1/30</td>
+					<td>连接 AR2</td>
+					<td>Area 0</td>
+			</tr>
+			<tr>
+					<td>AR1</td>
+					<td>G0/0/2</td>
+					<td>10.0.0.10/30</td>
+					<td>连接 AR3</td>
+					<td>Area 0</td>
+			</tr>
+			<tr>
+					<td>AR1</td>
+					<td>G0/0/1</td>
+					<td>10.1.0.1/30</td>
+					<td>连接 LSW4 Vlanif100</td>
+					<td>Area 1</td>
+			</tr>
+			<tr>
+					<td>AR2</td>
+					<td>G0/0/0</td>
+					<td>10.0.0.2/30</td>
+					<td>连接 AR1</td>
+					<td>Area 0</td>
+			</tr>
+			<tr>
+					<td>AR2</td>
+					<td>G0/0/1</td>
+					<td>10.0.0.5/30</td>
+					<td>连接 AR3</td>
+					<td>Area 0</td>
+			</tr>
+			<tr>
+					<td>AR2</td>
+					<td>G0/0/2</td>
+					<td>10.1.1.1/30</td>
+					<td>连接 LSW1 Vlanif100</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>AR2</td>
+					<td>G1/0/0</td>
+					<td>10.1.2.1/30</td>
+					<td>连接 LSW2 Vlanif100</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>AR3</td>
+					<td>G0/0/0</td>
+					<td>10.0.0.9/30</td>
+					<td>连接 AR1</td>
+					<td>Area 0</td>
+			</tr>
+			<tr>
+					<td>AR3</td>
+					<td>G0/0/1</td>
+					<td>10.0.0.6/30</td>
+					<td>连接 AR2</td>
+					<td>Area 0</td>
+			</tr>
+			<tr>
+					<td>AR3</td>
+					<td>G0/0/2</td>
+					<td>10.1.3.1/30</td>
+					<td>连接 LSW3 Vlanif100</td>
+					<td>Area 3</td>
+			</tr>
+			<tr>
+					<td>LSW1</td>
+					<td>Vlanif11</td>
+					<td>192.168.11.1/24</td>
+					<td>工作区 1 业务网关</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>LSW1</td>
+					<td>Vlanif100</td>
+					<td>10.1.1.2/30</td>
+					<td>连接 AR2</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>LSW1</td>
+					<td>Vlanif200</td>
+					<td>20.1.1.9/30</td>
+					<td>AP1 管理网关</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>LSW2</td>
+					<td>Vlanif12</td>
+					<td>192.168.12.1/24</td>
+					<td>工作区 2 业务网关</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>LSW2</td>
+					<td>Vlanif100</td>
+					<td>10.1.2.2/30</td>
+					<td>连接 AR2</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>LSW2</td>
+					<td>Vlanif200</td>
+					<td>20.1.1.13/30</td>
+					<td>AP2 管理网关</td>
+					<td>Area 2</td>
+			</tr>
+			<tr>
+					<td>LSW3</td>
+					<td>Vlanif13</td>
+					<td>192.168.13.1/24</td>
+					<td>工作区 3 业务网关</td>
+					<td>Area 3</td>
+			</tr>
+			<tr>
+					<td>LSW3</td>
+					<td>Vlanif100</td>
+					<td>10.1.3.2/30</td>
+					<td>连接 AR3</td>
+					<td>Area 3</td>
+			</tr>
+			<tr>
+					<td>LSW3</td>
+					<td>Vlanif200</td>
+					<td>20.1.1.17/30</td>
+					<td>AP3 管理网关</td>
+					<td>Area 3</td>
+			</tr>
+			<tr>
+					<td>LSW4</td>
+					<td>Vlanif10</td>
+					<td>192.168.1.1/24</td>
+					<td>连接 DHCP Server</td>
+					<td>Area 1</td>
+			</tr>
+			<tr>
+					<td>LSW4</td>
+					<td>Vlanif100</td>
+					<td>10.1.0.2/30</td>
+					<td>连接 AR1</td>
+					<td>Area 1</td>
+			</tr>
+			<tr>
+					<td>LSW4</td>
+					<td>Vlanif200</td>
+					<td>20.1.1.5/30</td>
+					<td>连接 AC6005</td>
+					<td>Area 1</td>
+			</tr>
+			<tr>
+					<td>AC6005</td>
+					<td>Vlanif200</td>
+					<td>20.1.1.6/30</td>
+					<td>连接 LSW4</td>
+					<td>不运行 OSPF</td>
+			</tr>
+			<tr>
+					<td>DHCP Server</td>
+					<td>G0/0/0</td>
+					<td>192.168.1.2/24</td>
+					<td>连接 LSW4</td>
+					<td>静态</td>
+			</tr>
+			<tr>
+					<td>AP1 管理池</td>
+					<td>20.1.1.8/30</td>
+					<td>网关 20.1.1.9</td>
+					<td>AC 分配</td>
+					<td>-</td>
+			</tr>
+			<tr>
+					<td>AP2 管理池</td>
+					<td>20.1.1.12/30</td>
+					<td>网关 20.1.1.13</td>
+					<td>AC 分配</td>
+					<td>-</td>
+			</tr>
+			<tr>
+					<td>AP3 管理池</td>
+					<td>20.1.1.16/30</td>
+					<td>网关 20.1.1.17</td>
+					<td>AC 分配</td>
+					<td>-</td>
+			</tr>
+			<tr>
+					<td>VLAN11 业务池</td>
+					<td>192.168.11.0/24</td>
+					<td>网关 192.168.11.1</td>
+					<td>DHCP Server 分配</td>
+					<td>-</td>
+			</tr>
+			<tr>
+					<td>VLAN12 业务池</td>
+					<td>192.168.12.0/24</td>
+					<td>网关 192.168.12.1</td>
+					<td>DHCP Server 分配</td>
+					<td>-</td>
+			</tr>
+			<tr>
+					<td>VLAN13 业务池</td>
+					<td>192.168.13.0/24</td>
+					<td>网关 192.168.13.1</td>
+					<td>DHCP Server 分配</td>
+					<td>-</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="vlan分配">VLAN分配</h3>
+<table>
+	<thead>
+			<tr>
+					<th>VLAN ID</th>
+					<th>名称</th>
+					<th>用途</th>
+					<th>网关</th>
+					<th>所在设备</th>
+					<th>备注</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>VLAN10</td>
+					<td>管理服务器 VLAN</td>
+					<td>连接 DHCP Server</td>
+					<td>192.168.1.1/24</td>
+					<td>LSW4</td>
+					<td>DHCP Server 为 192.168.1.2/24</td>
+			</tr>
+			<tr>
+					<td>VLAN11</td>
+					<td>工作区 1 业务 VLAN</td>
+					<td>PC1、STA1 业务</td>
+					<td>192.168.11.1/24</td>
+					<td>LSW1</td>
+					<td>无线 SSID 映射 VLAN11</td>
+			</tr>
+			<tr>
+					<td>VLAN12</td>
+					<td>工作区 2 业务 VLAN</td>
+					<td>PC2、STA1 业务</td>
+					<td>192.168.12.1/24</td>
+					<td>LSW2</td>
+					<td>无线 SSID 映射 VLAN12</td>
+			</tr>
+			<tr>
+					<td>VLAN13</td>
+					<td>工作区 3 业务 VLAN</td>
+					<td>PC3 业务</td>
+					<td>192.168.13.1/24</td>
+					<td>LSW3</td>
+					<td>无线 SSID 映射 VLAN13</td>
+			</tr>
+			<tr>
+					<td>VLAN100</td>
+					<td>互联 VLAN</td>
+					<td>核心交换机与路由器互联</td>
+					<td>各 /30 接口</td>
+					<td>LSW1-LSW4</td>
+					<td>运行 OSPF</td>
+			</tr>
+			<tr>
+					<td>VLAN200</td>
+					<td>AP 管理 VLAN</td>
+					<td>AP 管理、AC 控制</td>
+					<td>20.1.1.x/30</td>
+					<td>LSW1-LSW4、AC</td>
+					<td>DHCP 中继到 AC</td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="详细配置">详细配置</h2>
+<ul>
+<li>VLAN与IP创建</li>
+</ul>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#(交换机)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>vlan batch <span style="color:#ae81ff">11</span> <span style="color:#ae81ff">100</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>interface vlanif <span style="color:#ae81ff">11</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif11<span style="color:#f92672">]</span>ip address 192.168.11.1 <span style="color:#ae81ff">24</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif11<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif100<span style="color:#f92672">]</span>ip address 10.1.1.2 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif100<span style="color:#f92672">]</span>inte vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif200<span style="color:#f92672">]</span>ip address 20.1.1.9 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif200<span style="color:#f92672">]</span>quit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>vlan batch <span style="color:#ae81ff">12</span> <span style="color:#ae81ff">100</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif12<span style="color:#f92672">]</span>ip a 192.168.12.1 <span style="color:#ae81ff">24</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif12<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif100<span style="color:#f92672">]</span>ip a 10.1.2.2 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif100<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif200<span style="color:#f92672">]</span>ip a 20.1.1.13 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>vlan batch <span style="color:#ae81ff">13</span> <span style="color:#ae81ff">100</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">13</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif13<span style="color:#f92672">]</span>ip a 192.168.13.1 <span style="color:#ae81ff">24</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif13<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif100<span style="color:#f92672">]</span>ip a 10.1.3.2 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif100<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif200<span style="color:#f92672">]</span>ip a 20.1.1.17 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>vlan batch <span style="color:#ae81ff">10</span> <span style="color:#ae81ff">100</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-Vlanif10<span style="color:#f92672">]</span>ip a 192.168.1.1 <span style="color:#ae81ff">24</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-Vlanif10<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-Vlanif100<span style="color:#f92672">]</span>ip a 10.1.0.2 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-Vlanif100<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-Vlanif200<span style="color:#f92672">]</span>ip a 20.1.1.5 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#（AC）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>vlan <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-vlan200<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-Vlanif200<span style="color:#f92672">]</span>ip a 20.1.1.6 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#（路由器）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip a 10.0.0.1 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>ip a 10.1.0.1 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/2<span style="color:#f92672">]</span>ip a 10.0.0.10 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-GigabitEthernet0/0/2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip a 10.0.0.2 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>ip a 10.0.0.5 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/2<span style="color:#f92672">]</span>ip a 10.1.1.1 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet0/0/2<span style="color:#f92672">]</span>int g 1/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet1/0/0<span style="color:#f92672">]</span>ip a 10.1.2.1 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-GigabitEthernet1/0/0<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip a 10.0.0.9 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/0<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>ip a 10.0.0.6 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/2<span style="color:#f92672">]</span>ip a 10.1.3.1 <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-GigabitEthernet0/0/2<span style="color:#f92672">]</span>q</span></span></code></pre></div>
+  </div><ul>
+<li>接口绑定与网络宣告（OSPF)</li>
+</ul>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#（接入交换机）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6<span style="color:#f92672">]</span>vlan batch <span style="color:#ae81ff">11</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/2<span style="color:#f92672">]</span>port link-type trunk
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/2<span style="color:#f92672">]</span>port trunk pvid vlan <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/2<span style="color:#f92672">]</span>port trunk allow-pass vlan <span style="color:#ae81ff">11</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/2<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/1<span style="color:#f92672">]</span>port link-type trunk
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po trunk allow-pass vlan <span style="color:#ae81ff">11</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6<span style="color:#f92672">]</span>int e0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-Ethernet0/0/1<span style="color:#f92672">]</span>port link access
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-Ethernet0/0/1<span style="color:#f92672">]</span>port default vlan <span style="color:#ae81ff">11</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW6-Ethernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7<span style="color:#f92672">]</span>vlan batch <span style="color:#ae81ff">12</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po li t
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po t pvid v <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po t a v <span style="color:#ae81ff">12</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/2<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po li t
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/1<span style="color:#f92672">]</span>port t a vlan <span style="color:#ae81ff">200</span> <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7<span style="color:#f92672">]</span>int e 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-Ethernet0/0/1<span style="color:#f92672">]</span>po li a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-Ethernet0/0/1<span style="color:#f92672">]</span>po de v <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW7-Ethernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po li t
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po t pvid v <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po t al v <span style="color:#ae81ff">13</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/2<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po li t
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po t all v <span style="color:#ae81ff">13</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8<span style="color:#f92672">]</span>int e 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-Ethernet0/0/1<span style="color:#f92672">]</span>po li a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-Ethernet0/0/1<span style="color:#f92672">]</span>po de v <span style="color:#ae81ff">13</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>SW8-Ethernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#（核心交换机）</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 连接路由器接口采用ospf宣告</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-GigabitEthernet0/0/2<span style="color:#f92672">]</span>port link-type trunk
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-GigabitEthernet0/0/2<span style="color:#f92672">]</span>port trunk allow-pass vlan <span style="color:#ae81ff">11</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-GigabitEthernet0/0/2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>port link-type access
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>port default vlan <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 20.1.1.8 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 10.1.1.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 192.168.11.0 0.0.0.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po li t
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po t all vlan <span style="color:#ae81ff">12</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-GigabitEthernet0/0/2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po li a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po de vlan <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 20.1.1.12 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>network 10.1.2.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>net 192.168.12.0 0.0.0.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po li t
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po t a v <span style="color:#ae81ff">13</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-GigabitEthernet0/0/2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po li a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po de v <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-ospf-1-area-0.0.0.3<span style="color:#f92672">]</span>net 20.1.1.16 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-ospf-1-area-0.0.0.3<span style="color:#f92672">]</span>net 10.1.3.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-ospf-1-area-0.0.0.3<span style="color:#f92672">]</span>net 192.168.13.0 0.0.0.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-ospf-1-area-0.0.0.3<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>int g 0/0/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po li a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/2<span style="color:#f92672">]</span>po de vlan <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po li ac
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po de vlan <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>int g 0/0/3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/3<span style="color:#f92672">]</span>po li ac
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/3<span style="color:#f92672">]</span>po de vlan <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/3<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>net 20.1.1.4 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>net 10.1.0.2 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#(AC)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>int g 0/0/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po li a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-GigabitEthernet0/0/1<span style="color:#f92672">]</span>po de vlan <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-GigabitEthernet0/0/1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#路由器</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>net 10.0.0.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>net 10.0.0.8 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>area <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>net 10.1.0.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR1-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>net 10.0.0.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>net 10.0.0.4 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>area <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>net 10.1.1.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>net 10.1.2.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1-area-0.0.0.2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR2-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>net 10.0.0.4 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>net 10.0.0.8 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.0<span style="color:#f92672">]</span>area <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.3<span style="color:#f92672">]</span>net 10.1.3.0 0.0.0.3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1-area-0.0.0.3<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AR3-ospf-1<span style="color:#f92672">]</span>q</span></span></code></pre></div>
+  </div><ul>
+<li>DHCP中继设置</li>
+</ul>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>dhcp enable
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif200<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> relay
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif200<span style="color:#f92672">]</span>dhcp relay server-ip 20.1.1.6
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">11</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif11<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> relay
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif11<span style="color:#f92672">]</span>dhcp relay server-ip 192.168.1.2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW1-Vlanif11<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>dhcp e
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif200<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> relay
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif200<span style="color:#f92672">]</span>dhcp relay server-ip 20.1.1.6
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif12<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> relay
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif12<span style="color:#f92672">]</span>dhcp relay server-ip 192.168.1.2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW2-Vlanif12<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>dhcp enable
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif200<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> relay
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif200<span style="color:#f92672">]</span>dhcp relay server-ip 20.1.1.6
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">13</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif13<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> relay
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif13<span style="color:#f92672">]</span>dhcp relay server-ip 192.168.1.2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW3-Vlanif13<span style="color:#f92672">]</span>q</span></span></code></pre></div>
+  </div><ul>
+<li>
+<p>DHCP配置（华为内路由器方案）</p>
+</li>
+<li>
+<p>（外接Linux的DHCP服务器正在研究中）</p>
+</li>
+</ul>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>int g 0/0/3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/3<span style="color:#f92672">]</span>po li ac
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/3<span style="color:#f92672">]</span>po de vlan <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-GigabitEthernet0/0/3<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4<span style="color:#f92672">]</span>ospf <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1<span style="color:#f92672">]</span>area <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>net 192.168.1.0 0.0.0.255
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1-area-0.0.0.1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LSW4-ospf-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip a 192.168.1.2 <span style="color:#ae81ff">24</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-GigabitEthernet0/0/0<span style="color:#f92672">]</span>ip route-static 0.0.0.0 0.0.0.0 192.168.1.1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server<span style="color:#f92672">]</span>dhcp enable
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server<span style="color:#f92672">]</span>ip pool v11
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v11<span style="color:#f92672">]</span>network 192.168.11.0 mask 255.255.255.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v11<span style="color:#f92672">]</span>gateway-list 192.168.11.1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v11<span style="color:#f92672">]</span>dns-list 8.8.8.8
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v11<span style="color:#f92672">]</span>lease day <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v11<span style="color:#f92672">]</span>ip pool v12
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v12<span style="color:#f92672">]</span>network 192.168.12.0 mask 255.255.255.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v12<span style="color:#f92672">]</span>gateway-list 192.168.12.1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v12<span style="color:#f92672">]</span>dns-list 8.8.8.8
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v12<span style="color:#f92672">]</span>lease day <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v12<span style="color:#f92672">]</span>ip pool v13
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v13<span style="color:#f92672">]</span>net 192.168.13.0 mask 255.255.255.0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v13<span style="color:#f92672">]</span>gate 192.168.13.1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v13<span style="color:#f92672">]</span>dns 8.8.8.8
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v13<span style="color:#f92672">]</span>lease day <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-ip-pool-v13<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server<span style="color:#f92672">]</span>int g 0/0/0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-GigabitEthernet0/0/0<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> global
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DHCP Server-GigabitEthernet0/0/0<span style="color:#f92672">]</span>q</span></span></code></pre></div>
+  </div><ul>
+<li>AP配置</li>
+</ul>
+<div class="code-block">
+    <button class="code-copy" type="button" hidden aria-label="Copy code to clipboard">
+      <span class="code-copy-label" aria-hidden="true">Copy</span>
+    </button>
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>dhcp enable
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>int vlanif <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-Vlanif200<span style="color:#f92672">]</span>dhcp <span style="color:#66d9ef">select</span> global
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-Vlanif200<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#设置地址池</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>ip pool ap-pool
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool<span style="color:#f92672">]</span>network 20.1.1.8 mask <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool<span style="color:#f92672">]</span>gateway-list 20.1.1.9
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool<span style="color:#f92672">]</span>option <span style="color:#ae81ff">43</span> sub-option <span style="color:#ae81ff">3</span> ascii 20.1.1.6
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>ip pool ap-pool-2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-2<span style="color:#f92672">]</span>network 20.1.1.12 mask <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-2<span style="color:#f92672">]</span>gateway-list 20.1.1.13
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-2<span style="color:#f92672">]</span>option <span style="color:#ae81ff">43</span> sub-option <span style="color:#ae81ff">3</span> ascii 20.1.1.6
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-2<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>ip pool ap-pool-3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-3<span style="color:#f92672">]</span>net 20.1.1.16 mask <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-3<span style="color:#f92672">]</span>gateway-list 20.1.1.17
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-3<span style="color:#f92672">]</span>option <span style="color:#ae81ff">43</span> sub-option <span style="color:#ae81ff">3</span> ascii 20.1.1.6
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-ip-pool-ap-pool-3<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#区域设置</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005<span style="color:#f92672">]</span>wlan
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>regu    
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>regulatory-domain-profile name domain
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-regulate-domain-domain<span style="color:#f92672">]</span>country-code cn
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-regulate-domain-domain<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#AP认证方式（无认证不安全）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>ap auth-mode no-auth
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#安全模板（WIFI密码）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>security    
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>security-profile name sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-sec-prof-sec<span style="color:#f92672">]</span>security wpa-wpa2 psk pass-phrase <span style="color:#ae81ff">12345678</span> aes
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-sec-prof-sec<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#SSID模板（WIFI名字）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>ssid-profile name ssid-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-ssid-prof-ssid-0<span style="color:#f92672">]</span>ssid WIFI-2.4G
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-ssid-prof-ssid-0<span style="color:#f92672">]</span>ssid-profile name ssid-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-ssid-prof-ssid-1<span style="color:#f92672">]</span>ssid WIFI-5G
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-ssid-prof-ssid-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#VAP模板（将安全模板和SSID模板合并）</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>vap-profile name vap-11-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-0<span style="color:#f92672">]</span>forward-mode direct-forward
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-0<span style="color:#f92672">]</span>service-vlan vlan-id <span style="color:#ae81ff">11</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-0<span style="color:#f92672">]</span>security-profile sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-0<span style="color:#f92672">]</span>ssid-profile ssid-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-0<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>vap name vap-11-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-1<span style="color:#f92672">]</span>forward dire
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-1<span style="color:#f92672">]</span>service vlan <span style="color:#ae81ff">11</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-1<span style="color:#f92672">]</span>sec sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-1<span style="color:#f92672">]</span>ssid ssid-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-11-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>vap name vap-12-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-0<span style="color:#f92672">]</span><span style="color:#66d9ef">for</span> dir
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-0<span style="color:#f92672">]</span>ser vlan <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-0<span style="color:#f92672">]</span>sec sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-0<span style="color:#f92672">]</span>ssid ssid-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-0<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>vap name vap-12-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-1<span style="color:#f92672">]</span><span style="color:#66d9ef">for</span> dir
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-1<span style="color:#f92672">]</span>ser vlan <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-1<span style="color:#f92672">]</span>sec sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-1<span style="color:#f92672">]</span>ssid ssid-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-12-1<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>vap name vap-13-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-0<span style="color:#f92672">]</span><span style="color:#66d9ef">for</span> dir
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-0<span style="color:#f92672">]</span>ser vlan <span style="color:#ae81ff">13</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-0<span style="color:#f92672">]</span>sec sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-0<span style="color:#f92672">]</span>ssid ssid-0
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-0<span style="color:#f92672">]</span>q
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-view<span style="color:#f92672">]</span>vap name vap-13-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-1<span style="color:#f92672">]</span><span style="color:#66d9ef">for</span> dir
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-1<span style="color:#f92672">]</span>ser vlan <span style="color:#ae81ff">13</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-1<span style="color:#f92672">]</span>sec sec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-1<span style="color:#f92672">]</span>ssid ssid-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>AC6005-wlan-vap-prof-vap-13-1<span style="color:#f92672">]</span>q</span></span></code></pre></div>
+  </div><p>完整命令行操作&mdash;&gt; <a href="/text/260915CLI.txt">点击查看</a></p>
+<h2 id="功能测试">功能测试</h2>
+<p>配置后拓扑图</p>
+<p><img src="/images/260915/6.png" alt=""></p>
+<p>PC设备均能成功获取IP地址</p>
+<p><img src="/images/260915/2.png" alt=""></p>
+<p>PC设备能互相ping通</p>
+<p><img src="/images/260915/3.png" alt=""></p>
+<p>无线设备（STA）能成功连接网络
+<img src="/images/260915/4.png" alt=""></p>
+<p>无线设备（STA）能成功ping通PC
+<img src="/images/260915/5.png" alt=""></p>
+<h2 id="总结含拓扑下载链接">总结（含拓扑下载链接）</h2>
+<p>本实验通过 OSPF 多区域实现三个工作区与机房之间的三层互通，通过 VLAN 划分实现业务、管理和互联隔离，通过 DHCP 中继实现跨网段地址分配，通过 AC6005 实现 Fit AP 统一管理。</p>
+<p>拓扑下载链接：</p>
+<ul>
+<li>
+<p><a href="https://yun.139.com/shareweb/#/w/i/2xPCN5R2pysko">移动网盘</a></p>
+</li>
+<li>
+<p><a href="https://pan.baidu.com/s/1dh8c7rAs_7kNa3GJgXUeug?pwd=k9g9">百度网盘（pwd：k9g9）</a></p>
+</li>
+<li>
+<p><a href="https://github.com/codezm-cn/Huawei-ENSP-Topology-diagram">Github</a></p>
+</li>
+</ul>
+<p><em>注意：由于ENSP已经停止更新，下载的拓扑可能会出现bug或者无法实现部分功能，尽情谅解</em></p>
+<ul class="pa0">
+  
+   <li class="list di">
+     <a href="/categories/huawei/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">Huawei</a>
+   </li>
+  
+</ul><ul class="pa0">
+  
+   <li class="list di">
+     <a href="/tags/ensp/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">ENSP</a>
+   </li>
+  
+   <li class="list di">
+     <a href="/tags/%E5%8D%8E%E4%B8%BA/" class="link f5 grow br-pill ba ph3 pv2 mb2 dib black sans-serif no-underline">华为</a>
+   </li>
+  
+</ul>
+
+      
+    </div><aside class="w-30-l mt6-l"><div class="bg-light-gray pa3 nested-list-reset nested-copy-line-height nested-links">
+    <p class="f5 b mb3">What&#39;s in this posts</p>
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#任务要求">任务要求</a></li>
+    <li><a href="#分析与预配置">分析与预配置</a>
+      <ul>
+        <li><a href="#ospf区域与dhcp规划">OSPF区域与DHCP规划</a></li>
+        <li><a href="#wlan-规划">WLAN 规划</a></li>
+        <li><a href="#配置组成">配置组成</a></li>
+        <li><a href="#ip分配">Ip分配</a></li>
+        <li><a href="#vlan分配">VLAN分配</a></li>
+      </ul>
+    </li>
+    <li><a href="#详细配置">详细配置</a></li>
+    <li><a href="#功能测试">功能测试</a></li>
+    <li><a href="#总结含拓扑下载链接">总结（含拓扑下载链接）</a></li>
+  </ul>
+</nav>
+  </div>
+
+
+
+
+  <div class="bg-light-gray pa3 nested-list-reset nested-copy-line-height nested-links">
+    <p class="f5 b mb3">Related</p>
+    <ul class="pa0 list">
+	   
+	     <li  class="mb2">
+          <a href="/posts/huawei/260816_ensp%E4%B8%ADcloud%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">ENSP中cloud的使用教程</a>
+        </li>
+	    
+	     <li  class="mb2">
+          <a href="/posts/huawei/260825_%E6%B5%85%E8%B0%88%E5%9B%9B%E4%B8%AA%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E4%BB%A5%E5%8F%8A%E5%85%B6%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B/">浅谈四个路由协议（RIP,OSPF,IS-IS,BGP）以及其配置教程</a>
+        </li>
+	    
+    </ul>
+</div>
+
+</aside></article>
+</main><footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white white-70 dn dib-ns pv2 ph3 no-underline" href="http://localhost:1313/" >
+    &copy;  codezm-cn的网络工程笔记 2026 
+  </a>
+    <div><div class="ananke-socials"></div>
+</div>
+  </div>
+</footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

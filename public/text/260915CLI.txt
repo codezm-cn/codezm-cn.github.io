@@ -1,0 +1,424 @@
+#VLAN与IP创建
+
+[LSW1]vlan batch 11 100 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[LSW1]interface vlanif 11
+[LSW1-Vlanif11]ip address 192.168.11.1 24
+[LSW1-Vlanif11]int vlanif 100
+[LSW1-Vlanif100]ip address 10.1.1.2 30
+[LSW1-Vlanif100]inte vlanif 200
+[LSW1-Vlanif200]ip address 20.1.1.9 30
+[LSW1-Vlanif200]quit
+
+[LSW2]vlan batch 12 100 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[LSW2]int vlanif 12
+[LSW2-Vlanif12]ip a 192.168.12.1 24
+[LSW2-Vlanif12]int vlanif 100
+[LSW2-Vlanif100]ip a 10.1.2.2 30
+[LSW2-Vlanif100]int vlanif 200
+[LSW2-Vlanif200]ip a 20.1.1.13 30
+[LSW2-Vlanif200]q
+
+[LSW3]vlan batch 13 100 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[LSW3]int vlanif 13
+[LSW3-Vlanif13]ip a 192.168.13.1 24
+[LSW3-Vlanif13]int vlanif 100
+[LSW3-Vlanif100]ip a 10.1.3.2 30
+[LSW3-Vlanif100]int vlanif 200
+[LSW3-Vlanif200]ip a 20.1.1.17 30
+[LSW3-Vlanif200]q
+
+[LSW4]vlan batch 10 100 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[LSW4]int vlanif 10
+[LSW4-Vlanif10]ip a 192.168.1.1 24
+[LSW4-Vlanif10]int vlanif 100
+[LSW4-Vlanif100]ip a 10.1.0.2 30
+[LSW4-Vlanif100]int vlanif 200
+[LSW4-Vlanif200]ip a 20.1.1.5 30
+[LSW4-Vlanif200]q
+
+[AC6005]vlan 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[AC6005-vlan200]int vlanif 200
+[AC6005-Vlanif200]ip a 20.1.1.6 30
+[AC6005-Vlanif200]q
+
+
+
+#（路由器）
+[AR1]int g 0/0/0
+[AR1-GigabitEthernet0/0/0]ip a 10.0.0.1 30
+[AR1-GigabitEthernet0/0/0]int g 0/0/1
+[AR1-GigabitEthernet0/0/1]ip a 10.1.0.1 30
+[AR1-GigabitEthernet0/0/1]int g 0/0/2
+[AR1-GigabitEthernet0/0/2]ip a 10.0.0.10 30
+[AR1-GigabitEthernet0/0/2]q
+
+[AR2]int g 0/0/0
+[AR2-GigabitEthernet0/0/0]ip a 10.0.0.2 30
+[AR2-GigabitEthernet0/0/0]int g 0/0/1
+[AR2-GigabitEthernet0/0/1]ip a 10.0.0.5 30
+[AR2-GigabitEthernet0/0/1]int g 0/0/2
+[AR2-GigabitEthernet0/0/2]ip a 10.1.1.1 30
+[AR2-GigabitEthernet0/0/2]int g 1/0/0
+[AR2-GigabitEthernet1/0/0]ip a 10.1.2.1 30
+[AR2-GigabitEthernet1/0/0]q
+
+[AR3]int g 0/0/0
+[AR3-GigabitEthernet0/0/0]ip a 10.0.0.9 30
+[AR3-GigabitEthernet0/0/0]int g 0/0/1
+[AR3-GigabitEthernet0/0/1]ip a 10.0.0.6 30
+[AR3-GigabitEthernet0/0/1]int g 0/0/2
+[AR3-GigabitEthernet0/0/2]ip a 10.1.3.1 30
+[AR3-GigabitEthernet0/0/2]q
+
+
+
+
+
+#接口绑定与网络宣告（OSPF)
+#（接入交换机）
+[SW6]vlan batch 11 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[SW6]int g 0/0/2
+[SW6-GigabitEthernet0/0/2]port link-type trunk
+[SW6-GigabitEthernet0/0/2]port trunk pvid vlan 200
+[SW6-GigabitEthernet0/0/2]port trunk allow-pass vlan 11 200
+[SW6-GigabitEthernet0/0/2]int g 0/0/1
+[SW6-GigabitEthernet0/0/1]port link-type trunk
+[SW6-GigabitEthernet0/0/1]po trunk allow-pass vlan 11 200
+[SW6-GigabitEthernet0/0/1]q
+[SW6]int e0/0/1
+[SW6-Ethernet0/0/1]port link access
+[SW6-Ethernet0/0/1]port default vlan 11
+[SW6-Ethernet0/0/1]q
+
+[SW7]vlan batch 12 200
+Info: This operation may take a few seconds. Please wait for a moment...done.
+[SW7]int g 0/0/2
+[SW7-GigabitEthernet0/0/2]po li t
+[SW7-GigabitEthernet0/0/2]po t pvid v 200
+[SW7-GigabitEthernet0/0/2]po t a v 12 200
+[SW7-GigabitEthernet0/0/2]int g 0/0/1
+[SW7-GigabitEthernet0/0/1]po li t
+[SW7-GigabitEthernet0/0/1]port t a vlan 200 12
+[SW7-GigabitEthernet0/0/1]q
+[SW7]int e 0/0/1
+[SW7-Ethernet0/0/1]po li a
+[SW7-Ethernet0/0/1]po de v 12
+[SW7-Ethernet0/0/1]q
+
+[SW8]int g 0/0/2
+[SW8-GigabitEthernet0/0/2]po li t
+[SW8-GigabitEthernet0/0/2]po t pvid v 200
+[SW8-GigabitEthernet0/0/2]po t al v 13 200
+[SW8-GigabitEthernet0/0/2]int g 0/0/1
+[SW8-GigabitEthernet0/0/1]po li t
+[SW8-GigabitEthernet0/0/1]po t all v 13 200
+[SW8-GigabitEthernet0/0/1]q
+[SW8]int e 0/0/1
+[SW8-Ethernet0/0/1]po li a
+[SW8-Ethernet0/0/1]po de v 13
+[SW8-Ethernet0/0/1]q
+
+
+#（核心交换机）
+# 连接路由器接口采用ospf宣告
+[LSW1]int g 0/0/2
+[LSW1-GigabitEthernet0/0/2]port link-type trunk
+[LSW1-GigabitEthernet0/0/2]port trunk allow-pass vlan 11 200
+[LSW1-GigabitEthernet0/0/2]q
+[LSW1]int g 0/0/1
+[LSW1-GigabitEthernet0/0/1]port link-type access
+[LSW1-GigabitEthernet0/0/1]port default vlan 100
+[LSW1-GigabitEthernet0/0/1]q
+[LSW1]ospf 1
+[LSW1-ospf-1]area 2
+[LSW1-ospf-1-area-0.0.0.2]network 20.1.1.8 0.0.0.3
+[LSW1-ospf-1-area-0.0.0.2]network 10.1.1.0 0.0.0.3
+[LSW1-ospf-1-area-0.0.0.2]network 192.168.11.0 0.0.0.255
+[LSW1-ospf-1-area-0.0.0.2]q
+[LSW1-ospf-1]q
+
+[LSW2]int g 0/0/2
+[LSW2-GigabitEthernet0/0/2]po li t
+[LSW2-GigabitEthernet0/0/2]po t all vlan 12 200
+[LSW2-GigabitEthernet0/0/2]q
+[LSW2]int g 0/0/1
+[LSW2-GigabitEthernet0/0/1]po li a
+[LSW2-GigabitEthernet0/0/1]po de vlan 100
+[LSW2-GigabitEthernet0/0/1]q
+[LSW2]ospf 1
+[LSW2-ospf-1]area 2
+[LSW2-ospf-1-area-0.0.0.2]network 20.1.1.12 0.0.0.3
+[LSW2-ospf-1-area-0.0.0.2]network 10.1.2.0 0.0.0.3
+[LSW2-ospf-1-area-0.0.0.2]net 192.168.12.0 0.0.0.255
+[LSW2-ospf-1-area-0.0.0.2]q
+[LSW2-ospf-1]q
+
+[LSW3]int g 0/0/2
+[LSW3-GigabitEthernet0/0/2]po li t
+[LSW3-GigabitEthernet0/0/2]po t a v 13 200
+[LSW3-GigabitEthernet0/0/2]q
+[LSW3]int g 0/0/1
+[LSW3-GigabitEthernet0/0/1]po li a
+[LSW3-GigabitEthernet0/0/1]po de v 100
+[LSW3-GigabitEthernet0/0/1]q
+[LSW3]ospf 1
+[LSW3-ospf-1]area 3
+[LSW3-ospf-1-area-0.0.0.3]net 20.1.1.16 0.0.0.3
+[LSW3-ospf-1-area-0.0.0.3]net 10.1.3.0 0.0.0.3
+[LSW3-ospf-1-area-0.0.0.3]net 192.168.13.0 0.0.0.255
+[LSW3-ospf-1-area-0.0.0.3]q
+[LSW3-ospf-1]q
+
+[LSW4]int g 0/0/2
+[LSW4-GigabitEthernet0/0/2]po li a
+[LSW4-GigabitEthernet0/0/2]po de vlan 200
+[LSW4]int g 0/0/1
+[LSW4-GigabitEthernet0/0/1]po li ac
+[LSW4-GigabitEthernet0/0/1]po de vlan 100
+[LSW4-GigabitEthernet0/0/1]q
+[LSW4]int g 0/0/3
+[LSW4-GigabitEthernet0/0/3]po li ac
+[LSW4-GigabitEthernet0/0/3]po de vlan 10
+[LSW4-GigabitEthernet0/0/3]q
+[LSW4]ospf 1
+[LSW4-ospf-1]area 1
+[LSW4-ospf-1-area-0.0.0.1]net 20.1.1.4 0.0.0.3
+[LSW4-ospf-1-area-0.0.0.1]net 10.1.0.2 0.0.0.3
+[LSW4-ospf-1-area-0.0.0.1]q
+[LSW4-ospf-1]q
+
+[AC6005]int g 0/0/1
+[AC6005-GigabitEthernet0/0/1]po li a
+[AC6005-GigabitEthernet0/0/1]po de vlan 200
+[AC6005-GigabitEthernet0/0/1]q
+
+#路由器
+[AR1]ospf 1
+[AR1-ospf-1]area 0
+[AR1-ospf-1-area-0.0.0.0]net 10.0.0.0 0.0.0.3
+[AR1-ospf-1-area-0.0.0.0]net 10.0.0.8 0.0.0.3
+[AR1-ospf-1-area-0.0.0.0]area 1
+[AR1-ospf-1-area-0.0.0.1]net 10.1.0.0 0.0.0.3
+[AR1-ospf-1-area-0.0.0.1]q
+[AR1-ospf-1]q
+
+[AR2]ospf 1
+[AR2-ospf-1]area 0
+[AR2-ospf-1-area-0.0.0.0]net 10.0.0.0 0.0.0.3
+[AR2-ospf-1-area-0.0.0.0]net 10.0.0.4 0.0.0.3
+[AR2-ospf-1-area-0.0.0.0]area 2
+[AR2-ospf-1-area-0.0.0.2]net 10.1.1.0 0.0.0.3
+[AR2-ospf-1-area-0.0.0.2]net 10.1.2.0 0.0.0.3
+[AR2-ospf-1-area-0.0.0.2]q
+[AR2-ospf-1]q
+
+[AR3]ospf 1
+[AR3-ospf-1]area 0
+[AR3-ospf-1-area-0.0.0.0]net 10.0.0.4 0.0.0.3
+[AR3-ospf-1-area-0.0.0.0]net 10.0.0.8 0.0.0.3
+[AR3-ospf-1-area-0.0.0.0]area 3
+[AR3-ospf-1-area-0.0.0.3]net 10.1.3.0 0.0.0.3
+[AR3-ospf-1-area-0.0.0.3]q
+[AR3-ospf-1]q
+
+
+
+
+
+#DHCP中继设置
+[LSW1]dhcp enable
+Info: The operation may take a few seconds. Please wait for a moment.done.
+[LSW1]int vlanif 200
+[LSW1-Vlanif200]dhcp select relay
+[LSW1-Vlanif200]dhcp relay server-ip 20.1.1.6
+[LSW1-Vlanif200]q
+[LSW1]int vlanif 11
+[LSW1-Vlanif11]dhcp select relay
+[LSW1-Vlanif11]dhcp relay server-ip 192.168.1.2
+[LSW1-Vlanif11]q
+
+[LSW2]dhcp e
+Info: The operation may take a few seconds. Please wait for a moment.done.
+[LSW2]int vlanif 200
+[LSW2-Vlanif200]dhcp select relay
+[LSW2-Vlanif200]dhcp relay server-ip 20.1.1.6
+[LSW2-Vlanif200]q
+[LSW2]int vlanif 12
+[LSW2-Vlanif12]dhcp select relay
+[LSW2-Vlanif12]dhcp relay server-ip 192.168.1.2
+[LSW2-Vlanif12]q
+
+[LSW3]dhcp enable
+Info: The operation may take a few seconds. Please wait for a moment.done.
+[LSW3]int vlanif 200
+[LSW3-Vlanif200]dhcp select relay
+[LSW3-Vlanif200]dhcp relay server-ip 20.1.1.6
+[LSW3-Vlanif200]q
+[LSW3]int vlanif 13
+[LSW3-Vlanif13]dhcp select relay
+[LSW3-Vlanif13]dhcp relay server-ip 192.168.1.2
+[LSW3-Vlanif13]q
+
+
+
+
+
+#DHCP配置（华为内路由器方案）
+[LSW4]int g 0/0/3
+[LSW4-GigabitEthernet0/0/3]po li ac
+[LSW4-GigabitEthernet0/0/3]po de vlan 10
+[LSW4-GigabitEthernet0/0/3]q
+[LSW4]ospf 1
+[LSW4-ospf-1]area 1
+[LSW4-ospf-1-area-0.0.0.1]net 192.168.1.0 0.0.0.255
+[LSW4-ospf-1-area-0.0.0.1]q
+[LSW4-ospf-1]q
+
+[DHCP Server]int g 0/0/0
+[DHCP Server-GigabitEthernet0/0/0]ip a 192.168.1.2 24
+[DHCP Server-GigabitEthernet0/0/0]ip route-static 0.0.0.0 0.0.0.0 192.168.1.1
+
+[DHCP Server]dhcp enable
+Info: The operation may take a few seconds. Please wait for a moment.done.
+[DHCP Server]ip pool v11
+Info: It's successful to create an IP address pool.
+[DHCP Server-ip-pool-v11]network 192.168.11.0 mask 255.255.255.0
+[DHCP Server-ip-pool-v11]gateway-list 192.168.11.1
+[DHCP Server-ip-pool-v11]dns-list 8.8.8.8
+[DHCP Server-ip-pool-v11]lease day 1
+[DHCP Server-ip-pool-v11]ip pool v12
+Info: It's successful to create an IP address pool.
+[DHCP Server-ip-pool-v12]network 192.168.12.0 mask 255.255.255.0
+[DHCP Server-ip-pool-v12]gateway-list 192.168.12.1
+[DHCP Server-ip-pool-v12]dns-list 8.8.8.8
+[DHCP Server-ip-pool-v12]lease day 1
+[DHCP Server-ip-pool-v12]ip pool v13
+Info: It's successful to create an IP address pool.
+[DHCP Server-ip-pool-v13]net 192.168.13.0 mask 255.255.255.0
+[DHCP Server-ip-pool-v13]gate 192.168.13.1
+[DHCP Server-ip-pool-v13]dns 8.8.8.8
+[DHCP Server-ip-pool-v13]lease day 1
+[DHCP Server-ip-pool-v13]q
+[DHCP Server]int g 0/0/0
+[DHCP Server-GigabitEthernet0/0/0]dhcp select global
+[DHCP Server-GigabitEthernet0/0/0]q
+
+
+
+
+
+#AP配置
+[AC6005]dhcp enable
+Info: The operation may take a few seconds. Please wait for a moment.done.
+[AC6005]int vlanif 200
+[AC6005-Vlanif200]dhcp select global
+[AC6005-Vlanif200]q
+
+[AC6005]ip pool ap-pool
+Info: It is successful to create an IP address pool.
+[AC6005-ip-pool-ap-pool]network 20.1.1.8 mask 30
+[AC6005-ip-pool-ap-pool]gateway-list 20.1.1.9
+[AC6005-ip-pool-ap-pool]option 43 sub-option 3 ascii 20.1.1.6
+[AC6005-ip-pool-ap-pool]q
+[AC6005]ip pool ap-pool-2
+Info: It is successful to create an IP address pool.
+[AC6005-ip-pool-ap-pool-2]network 20.1.1.12 mask 30
+[AC6005-ip-pool-ap-pool-2]gateway-list 20.1.1.13
+[AC6005-ip-pool-ap-pool-2]option 43 sub-option 3 ascii 20.1.1.6
+[AC6005-ip-pool-ap-pool-2]q
+[AC6005]ip pool ap-pool-3
+Info: It is successful to create an IP address pool.
+[AC6005-ip-pool-ap-pool-3]net 20.1.1.16 mask 30
+[AC6005-ip-pool-ap-pool-3]gateway-list 20.1.1.17
+[AC6005-ip-pool-ap-pool-3]option 43 sub-option 3 ascii 20.1.1.6
+[AC6005-ip-pool-ap-pool-3]q
+
+[AC6005]wlan
+[AC6005-wlan-view]regu	
+[AC6005-wlan-view]regulatory-domain-profile name domain
+[AC6005-wlan-regulate-domain-domain]country-code cn
+Info: The current country code is same with the input country code.
+[AC6005-wlan-regulate-domain-domain]q
+
+[AC6005-wlan-view]ap auth-mode no-auth
+Warning: It is insecure to configure none authentication mode.
+
+[AC6005-wlan-view]security	
+[AC6005-wlan-view]security-profile name sec
+[AC6005-wlan-sec-prof-sec]security wpa-wpa2 psk pass-phrase 12345678 aes
+Warning: The current password is too simple. For the sake of security, you are a
+dvised to set a password containing at least two of the following: lowercase let
+ters a to z, uppercase letters A to Z, digits, and special characters. Continue?
+ [Y/N]:y
+[AC6005-wlan-sec-prof-sec]q
+
+[AC6005-wlan-view]ssid-profile name ssid-0
+[AC6005-wlan-ssid-prof-ssid-0]ssid WIFI-2.4G
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-ssid-prof-ssid-0]ssid-profile name ssid-1
+[AC6005-wlan-ssid-prof-ssid-1]ssid WIFI-5G
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-ssid-prof-ssid-1]q
+
+[AC6005-wlan-view]vap-profile name vap-11-0
+[AC6005-wlan-vap-prof-vap-11-0]forward-mode direct-forward
+[AC6005-wlan-vap-prof-vap-11-0]service-vlan vlan-id 11
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-11-0]security-profile sec
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-11-0]ssid-profile ssid-0
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-11-0]q
+[AC6005-wlan-view]vap name vap-11-1
+[AC6005-wlan-vap-prof-vap-11-1]forward dire
+[AC6005-wlan-vap-prof-vap-11-1]service vlan 11
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-11-1]sec sec
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-11-1]ssid ssid-1
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-11-1]q
+
+[AC6005-wlan-view]vap name vap-12-0
+[AC6005-wlan-vap-prof-vap-12-0]for dir
+[AC6005-wlan-vap-prof-vap-12-0]ser vlan 12
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-12-0]sec sec
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-12-0]ssid ssid-0
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-12-0]q
+[AC6005-wlan-view]vap name vap-12-1
+[AC6005-wlan-vap-prof-vap-12-1]for dir
+[AC6005-wlan-vap-prof-vap-12-1]ser vlan 12
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-12-1]sec sec
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-12-1]ssid ssid-1
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-12-1]q
+
+[AC6005-wlan-view]vap name vap-13-0
+[AC6005-wlan-vap-prof-vap-13-0]for dir
+[AC6005-wlan-vap-prof-vap-13-0]ser vlan 13
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-13-0]sec sec
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-13-0]ssid ssid-0
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-13-0]q
+[AC6005-wlan-view]vap name vap-13-1
+[AC6005-wlan-vap-prof-vap-13-1]for dir
+[AC6005-wlan-vap-prof-vap-13-1]ser vlan 13
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-13-1]sec sec
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-13-1]ssid ssid-1
+Info: This operation may take a few seconds, please wait.done.
+[AC6005-wlan-vap-prof-vap-13-1]q
