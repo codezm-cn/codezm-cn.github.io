@@ -1,0 +1,6 @@
+{{ if .Page.Params.toc }}
+  <div class="toc-wrapper">
+    <h4>{{ .Page.Params.tocTitle | default "📖 目录" }}</h4>
+    {{ .Page.TableOfContents }}
+  </div>
+{{ end }}
